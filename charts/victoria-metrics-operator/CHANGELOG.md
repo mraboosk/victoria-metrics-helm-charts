@@ -2,6 +2,37 @@
 
 ## Next release
 
+- Added global imagePullSecrets and image.registry
+
+## 0.34.0
+
+**Release date:** 2024-08-15
+
+![AppVersion: v0.47.0](https://img.shields.io/static/v1?label=AppVersion&message=v0.47.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Set minimal kubernetes version to 1.25
+- Removed support for policy/v1beta1/PodDisruptionBudget
+- Added configurable probes at `.Values.probe`
+- updates operator to [v0.47.0](https://github.com/VictoriaMetrics/operator/releases/tag/v0.47.0) release
+- adds RBAC permissions to VLogs object
+
+## 0.33.6
+
+**Release date:** 2024-08-07
+
+![AppVersion: v0.46.4](https://img.shields.io/static/v1?label=AppVersion&message=v0.46.4&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- add missing permission to allow patching `horizontalpodautoscalers` when operator watches single namespace.
+
+## 0.33.5
+
+**Release date:** 2024-08-01
+
+![AppVersion: v0.46.4](https://img.shields.io/static/v1?label=AppVersion&message=v0.46.4&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
 - fix cleanup job image tag when `.Capabilities.KubeVersion.Minor` returns version with plus sign. See [this pull request](https://github.com/VictoriaMetrics/helm-charts/pull/1169) by @dimaslv.
 
 ## 0.33.4

@@ -2,7 +2,35 @@
 
 ## Next release
 
-- TODO
+- Added basicAuth support for ServiceMonitor
+- Removed PodSecurityPolicy
+- Set minimal kubernetes version to 1.25
+- Removed support for policy/v1beta1/PodDisruptionBudget
+- Added ability to override liveness and readiness probes
+- Updated `.Values.vmbackupmanager.readinessProbe` to `.Values.vmbackupmanager.probe.readiness`
+- Updated `.Values.vmbackupmanager.livenessProbe` to `.Values.vmbackupmanager.probe.liveness`
+- Updated `.Values.vmbackupmanager.startupProbe` to `.Values.vmbackupmanager.probe.startup`
+- Added global imagePullSecrets and image.registry
+- Fix templating of Ingress port when using custom port name.
+- Added `.Values.vmselect.emptyDir` and `.Values.vmstorage.emptyDir` to customize default cache directory
+
+## 0.11.23
+
+**Release date:** 2024-08-01
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- bump version of VM components to [v1.102.1](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.102.1)
+
+## 0.11.22
+
+**Release date:** 2024-07-31
+
+![AppVersion: v1.102.0](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fix mount name for `vmstorage` when using `.Values.vmstorage.persistentVolume.name` to override PVC name. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1181) for the details. Thanks to @srinusanduri for [the pull request](https://github.com/VictoriaMetrics/helm-charts/pull/1182).
 
 ## 0.11.21
 

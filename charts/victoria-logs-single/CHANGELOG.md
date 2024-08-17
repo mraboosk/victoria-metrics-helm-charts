@@ -2,7 +2,16 @@
 
 ## Next release
 
-- TODO
+**Update note**: The VictoriaMetrics components image tag template has been updated. This change introduces `.Values.<component>.image.variant` to specify tag suffixes like `-scratch`, `-cluster`, `-enterprise`. Additionally, you can now omit `.Values.<component>.image.tag` to automatically use the version specified in `.Chart.AppVersion`.
+
+- Added basicAuth support for ServiceMonitor
+- Set minimal kubernetes version to 1.25
+- Removed support for policy/v1beta1/PodDisruptionBudget
+- Updated `.Values.server.readinessProbe` to `.Values.server.probe.readiness`
+- Updated `.Values.server.livenessProbe` to `.Values.server.probe.liveness`
+- Updated `.Values.server.startupProbe` to `.Values.server.probe.startup`
+- Added global imagePullSecrets and image.registry
+- Added `.Values.server.emptyDir` to customize default data directory
 
 ## 0.5.4
 

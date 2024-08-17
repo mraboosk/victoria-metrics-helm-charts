@@ -2,6 +2,9 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 global:
+  image:
+    registry: ""
+  imagePullSecrets: []
   compatibility:
     openshift:
       adaptSecurityContext: "auto"
@@ -10,11 +13,13 @@ global:
 replicaCount: 1
 
 image:
+  # -- Victoria Metrics gateway Docker registry
+  registry: ""
   # -- Victoria Metrics gateway Docker repository and image name
   repository: victoriametrics/vmgateway
   # -- Tag of Docker image
   # override Chart.AppVersion
-  tag: v1.101.0-enterprise
+  tag: ""
   # Variant of the image to use.
   # e.g. enterprise, enterprise-scratch
   variant: ""
@@ -157,10 +162,17 @@ tolerations: []
 affinity: {}
 
 serviceMonitor:
+  # -- Enable deployment of Service Monitor for server component. This is Prometheus operator object
   enabled: false
+  # -- Service Monitor labels
   extraLabels: {}
+  # -- Service Monitor annotations
   annotations: {}
+  # -- Service Monitor relabelings
   relabelings: []
+  # -- Basic auth params for Service Monitor
+  basicAuth: {}
+  # -- Service Monitor metricRelabelings
   metricRelabelings: []
   #    interval: 15s
   #    scrapeTimeout: 5s
@@ -215,6 +227,22 @@ read:
 write:
   # -- Write endpoint without suffixes, victoriametrics or vminsert. Example http://victoroametrics:8428 or http://vminsert:8480
   url: ""
+
+probe:
+  readiness:
+    httpGet:
+      path: '{{ include "vm.probe.http.path" . }}'
+      scheme: '{{ include "vm.probe.http.scheme" . }}'
+      port: '{{ include "vm.probe.port" . }}'
+    initialDelaySeconds: 5
+    periodSeconds: 15
+  liveness:
+    tcpSocket:
+      port: '{{ include "vm.probe.port" . }}'
+    initialDelaySeconds: 5
+    periodSeconds: 15
+    timeoutSeconds: 5
+  startup: {}
 
 # -- Enterprise license key configuration for VictoriaMetrics enterprise.
 # Required only for VictoriaMetrics enterprise.

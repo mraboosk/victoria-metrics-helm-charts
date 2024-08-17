@@ -1,0 +1,60 @@
+server:
+  notifier:
+    alertmanager:
+      url: foo
+  notifiers:
+    - alertmanager:
+        url: foo2
+        bearer:
+          token: foo
+    - alertmanager:
+        url: foo3
+        bearer:
+          tokenFile: foo
+    - alertmanager:
+        url: foo4
+        basicAuth:
+          username: foo
+          password: foo
+
+  datasource:
+      url: foo
+  config:
+    alerts:
+      groups: ["bar"]
+  podDisruptionBudget:
+    enabled: true
+
+alertmanager:
+  enabled: true
+  envFrom:
+    - configMapRef:
+        name: alertmanager-config
+
+license:
+#  key: "asdf"
+  secret:
+    name: "victoria-metrics-license"
+    key: "license"
+
+serviceMonitor:
+  enabled: true
+  annotations:
+    annotationName: annotationValue
+  extraLabels:
+    labelName: labelValue
+  basicAuth:
+    password:
+      name: basic-auth
+      key: password
+    username:
+      name: basic-auth
+      key: user
+  relabelings:
+  - sourceLabels: ["prometheus_replica"]
+    regex: ".*"
+    targetLabel: "another_prometheus_replica"
+    action: replace
+  metricRelabelings:
+  - regex: "prometheus_replica"
+    action: labeldrop

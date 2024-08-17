@@ -109,6 +109,8 @@ rules:
 - apiGroups:
   - operator.victoriametrics.com
   resources:
+  - vlogs
+  - vlogs/finalizers
   - vmagents
   - vmagents/finalizers
   - vmalertmanagers
@@ -140,16 +142,11 @@ rules:
   - vmscrapeconfigs
   - vmscrapeconfigs/finalizers
   verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
+    - '*'
 - apiGroups:
   - operator.victoriametrics.com
   resources:
+  - vlogs/status
   - vmagents/status
   - vmalertmanagers/status
   - vmalertmanagerconfigs/status
@@ -196,13 +193,7 @@ rules:
     - roles
     - rolebindings
   verbs:
-    - get
-    - list
-    - create
-    - patch
-    - update
-    - watch
-    - delete
+    - '*'
 - apiGroups:
     - storage.k8s.io
   resources:
@@ -229,12 +220,7 @@ rules:
 - apiGroups:
     - autoscaling
   verbs:
-    - list
-    - get
-    - delete
-    - create
-    - update
-    - watch
+    - '*'
   resources:
     - horizontalpodautoscalers
 - apiGroups:

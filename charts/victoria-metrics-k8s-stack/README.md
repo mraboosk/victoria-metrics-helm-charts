@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics kubernetes monitoring stack.
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.24.3](https://img.shields.io/badge/Version-0.24.3-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.25.0](https://img.shields.io/badge/Version-0.25.0-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-k8s-stack)
 
 Kubernetes monitoring on VictoriaMetrics stack. Includes VictoriaMetrics Operator, Grafana dashboards, ServiceScrapes and VMRules
@@ -305,6 +305,9 @@ Change the values according to the need of the environment in ``victoria-metrics
 | coreDns | object | `{"enabled":true,"service":{"enabled":true,"port":9153,"selector":{"k8s-app":"kube-dns"},"targetPort":9153},"spec":{"endpoints":[{"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token","port":"http-metrics"}],"jobLabel":"jobLabel"}}` | Component scraping coreDns. Use either this or kubeDns |
 | crds.enabled | bool | `true` |  |
 | defaultDashboardsEnabled | bool | `true` |  |
+| defaultRules.alerting | object | `{"spec":{"annotations":{},"labels":{}}}` | Common properties for VMRules alerts |
+| defaultRules.alerting.spec.annotations | object | `{}` | Additional annotations for VMRule alerts |
+| defaultRules.alerting.spec.labels | object | `{}` | Additional labels for VMRule alerts |
 | defaultRules.annotations | object | `{}` | Annotations for default rules |
 | defaultRules.create | bool | `true` |  |
 | defaultRules.group | object | `{"spec":{"params":{}}}` | Common properties for VMRule groups |
@@ -377,12 +380,17 @@ Change the values according to the need of the environment in ``victoria-metrics
 | defaultRules.groups.vmagent.rules | object | `{}` |  |
 | defaultRules.groups.vmcluster.create | bool | `true` |  |
 | defaultRules.groups.vmcluster.rules | object | `{}` |  |
+| defaultRules.groups.vmoperator.create | bool | `true` |  |
+| defaultRules.groups.vmoperator.rules | object | `{}` |  |
 | defaultRules.groups.vmsingle.create | bool | `true` |  |
 | defaultRules.groups.vmsingle.rules | object | `{}` |  |
 | defaultRules.labels | object | `{}` | Labels for default rules |
-| defaultRules.rule | object | `{"spec":{"annotations":{},"labels":{}}}` | Common properties for VMRules |
-| defaultRules.rule.spec.annotations | object | `{}` | Additional annotations for VMRule alerts |
-| defaultRules.rule.spec.labels | object | `{}` | Additional labels for VMRule alerts |
+| defaultRules.recording | object | `{"spec":{"annotations":{},"labels":{}}}` | Common properties for VMRules recording rules |
+| defaultRules.recording.spec.annotations | object | `{}` | Additional annotations for VMRule recording rules |
+| defaultRules.recording.spec.labels | object | `{}` | Additional labels for VMRule recording rules |
+| defaultRules.rule | object | `{"spec":{"annotations":{},"labels":{}}}` | Common properties for all VMRules |
+| defaultRules.rule.spec.annotations | object | `{}` | Additional annotations for all VMRules |
+| defaultRules.rule.spec.labels | object | `{}` | Additional labels for all VMRules |
 | defaultRules.rules | object | `{}` | Per rule properties |
 | defaultRules.runbookUrl | string | `"https://runbooks.prometheus-operator.dev/runbooks"` | Runbook url prefix for default rules |
 | experimentalDashboardsEnabled | bool | `true` |  |
@@ -414,6 +422,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | grafana.ingress.path | string | `"/"` |  |
 | grafana.ingress.pathType | string | `"Prefix"` |  |
 | grafana.ingress.tls | list | `[]` |  |
+| grafana.provisionDefaultDatasource | bool | `true` |  |
 | grafana.sidecar.dashboards.additionalDashboardAnnotations | object | `{}` |  |
 | grafana.sidecar.dashboards.additionalDashboardLabels | object | `{}` |  |
 | grafana.sidecar.dashboards.enabled | bool | `true` |  |
@@ -430,7 +439,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | kube-state-metrics.enabled | bool | `true` |  |
 | kube-state-metrics.vmServiceScrape.spec | object | `{}` |  |
 | kubeApiServer | object | `{"enabled":true,"spec":{"endpoints":[{"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token","port":"https","scheme":"https","tlsConfig":{"caFile":"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt","serverName":"kubernetes"}}],"jobLabel":"component","namespaceSelector":{"matchNames":["default"]},"selector":{"matchLabels":{"component":"apiserver","provider":"kubernetes"}}}}` | Component scraping the kube api server |
-| kubeControllerManager | object | `{"enabled":true,"endpoints":[],"service":{"enabled":true,"port":10257,"targetPort":10257},"spec":{"endpoints":[{"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token","port":"http-metrics","scheme":"https","tlsConfig":{"caFile":"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt","serverName":"kubernetes"}}],"jobLabel":"jobLabel"}}` | Component scraping the kube controller manager |
+| kubeControllerManager | object | `{"enabled":true,"endpoints":[],"service":{"enabled":true,"port":10257,"selector":{"component":"kube-controller-manager"},"targetPort":10257},"spec":{"endpoints":[{"bearerTokenFile":"/var/run/secrets/kubernetes.io/serviceaccount/token","port":"http-metrics","scheme":"https","tlsConfig":{"caFile":"/var/run/secrets/kubernetes.io/serviceaccount/ca.crt","serverName":"kubernetes"}}],"jobLabel":"jobLabel"}}` | Component scraping the kube controller manager |
 | kubeDns.enabled | bool | `false` |  |
 | kubeDns.service.dnsmasq.port | int | `10054` |  |
 | kubeDns.service.dnsmasq.targetPort | int | `10054` |  |
@@ -446,6 +455,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | kubeEtcd.endpoints | list | `[]` |  |
 | kubeEtcd.service.enabled | bool | `true` |  |
 | kubeEtcd.service.port | int | `2379` |  |
+| kubeEtcd.service.selector.component | string | `"etcd"` |  |
 | kubeEtcd.service.targetPort | int | `2379` |  |
 | kubeEtcd.spec.endpoints[0].bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` |  |
 | kubeEtcd.spec.endpoints[0].port | string | `"http-metrics"` |  |
@@ -456,6 +466,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | kubeProxy.endpoints | list | `[]` |  |
 | kubeProxy.service.enabled | bool | `true` |  |
 | kubeProxy.service.port | int | `10249` |  |
+| kubeProxy.service.selector.k8s-app | string | `"kube-proxy"` |  |
 | kubeProxy.service.targetPort | int | `10249` |  |
 | kubeProxy.spec.endpoints[0].bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` |  |
 | kubeProxy.spec.endpoints[0].port | string | `"http-metrics"` |  |
@@ -466,6 +477,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | kubeScheduler.endpoints | list | `[]` |  |
 | kubeScheduler.service.enabled | bool | `true` |  |
 | kubeScheduler.service.port | int | `10259` |  |
+| kubeScheduler.service.selector.component | string | `"kube-scheduler"` |  |
 | kubeScheduler.service.targetPort | int | `10259` |  |
 | kubeScheduler.spec.endpoints[0].bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` |  |
 | kubeScheduler.spec.endpoints[0].port | string | `"http-metrics"` |  |
@@ -529,7 +541,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmagent.spec.externalLabels | object | `{}` |  |
 | vmagent.spec.extraArgs."promscrape.dropOriginalLabels" | string | `"true"` |  |
 | vmagent.spec.extraArgs."promscrape.streamParse" | string | `"true"` |  |
-| vmagent.spec.image.tag | string | `"v1.102.0"` |  |
+| vmagent.spec.image.tag | string | `"v1.102.1"` |  |
 | vmagent.spec.scrapeInterval | string | `"20s"` |  |
 | vmagent.spec.selectAllByDefault | bool | `true` |  |
 | vmalert.additionalNotifierConfigs | object | `{}` |  |
@@ -546,7 +558,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmalert.remoteWriteVMAgent | bool | `false` |  |
 | vmalert.spec.evaluationInterval | string | `"15s"` |  |
 | vmalert.spec.externalLabels | object | `{}` |  |
-| vmalert.spec.image.tag | string | `"v1.102.0"` |  |
+| vmalert.spec.image.tag | string | `"v1.102.1"` |  |
 | vmalert.spec.selectAllByDefault | bool | `true` |  |
 | vmalert.templateFiles | object | `{}` |  |
 | vmcluster.annotations | object | `{}` |  |
@@ -578,19 +590,19 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmcluster.spec.replicationFactor | int | `2` |  |
 | vmcluster.spec.retentionPeriod | string | `"1"` | Data retention period. Possible units character: h(ours), d(ays), w(eeks), y(ears), if no unit character specified - month. The minimum retention period is 24h. See these [docs](https://docs.victoriametrics.com/single-server-victoriametrics/#retention) |
 | vmcluster.spec.vminsert.extraArgs | object | `{}` |  |
-| vmcluster.spec.vminsert.image.tag | string | `"v1.102.0-cluster"` |  |
+| vmcluster.spec.vminsert.image.tag | string | `"v1.102.1-cluster"` |  |
 | vmcluster.spec.vminsert.replicaCount | int | `2` |  |
 | vmcluster.spec.vminsert.resources | object | `{}` |  |
 | vmcluster.spec.vmselect.cacheMountPath | string | `"/select-cache"` |  |
 | vmcluster.spec.vmselect.extraArgs | object | `{}` |  |
-| vmcluster.spec.vmselect.image.tag | string | `"v1.102.0-cluster"` |  |
+| vmcluster.spec.vmselect.image.tag | string | `"v1.102.1-cluster"` |  |
 | vmcluster.spec.vmselect.replicaCount | int | `2` |  |
 | vmcluster.spec.vmselect.resources | object | `{}` |  |
 | vmcluster.spec.vmselect.storage.volumeClaimTemplate.spec.resources.requests.storage | string | `"2Gi"` |  |
-| vmcluster.spec.vmstorage.image.tag | string | `"v1.102.0-cluster"` |  |
+| vmcluster.spec.vmstorage.image.tag | string | `"v1.102.1-cluster"` |  |
 | vmcluster.spec.vmstorage.replicaCount | int | `2` |  |
 | vmcluster.spec.vmstorage.resources | object | `{}` |  |
 | vmcluster.spec.vmstorage.storage.volumeClaimTemplate.spec.resources.requests.storage | string | `"10Gi"` |  |
 | vmcluster.spec.vmstorage.storageDataPath | string | `"/vm-data"` |  |
-| vmsingle | object | `{"annotations":{},"enabled":true,"ingress":{"annotations":{},"enabled":false,"extraPaths":[],"hosts":["vmsingle.domain.com"],"labels":{},"path":"/","pathType":"Prefix","tls":[]},"spec":{"extraArgs":{},"image":{"tag":"v1.102.0"},"replicaCount":1,"retentionPeriod":"1","storage":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"20Gi"}}}}}` | Configures vmsingle params |
+| vmsingle | object | `{"annotations":{},"enabled":true,"ingress":{"annotations":{},"enabled":false,"extraPaths":[],"hosts":["vmsingle.domain.com"],"labels":{},"path":"/","pathType":"Prefix","tls":[]},"spec":{"extraArgs":{},"image":{"tag":"v1.102.1"},"replicaCount":1,"retentionPeriod":"1","storage":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"20Gi"}}}}}` | Configures vmsingle params |
 | vmsingle.spec.retentionPeriod | string | `"1"` | Data retention period. Possible units character: h(ours), d(ays), w(eeks), y(ears), if no unit character specified - month. The minimum retention period is 24h. See these [docs](https://docs.victoriametrics.com/single-server-victoriametrics/#retention) |

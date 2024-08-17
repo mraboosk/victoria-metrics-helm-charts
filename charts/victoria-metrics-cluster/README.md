@@ -1,6 +1,6 @@
 # Victoria Metrics Helm Chart for Cluster Version
 
- ![Version: 0.11.21](https://img.shields.io/badge/Version-0.11.21-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.11.23](https://img.shields.io/badge/Version-0.11.23-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-cluster)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -106,6 +106,8 @@ Change the values according to the need of the environment in ``victoria-metrics
 | extraObjects | list | `[]` | Add extra specs dynamically to this chart |
 | extraSecrets | list | `[]` |  |
 | global.compatibility.openshift.adaptSecurityContext | string | `"auto"` |  |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | license | object | `{"key":"","secret":{"key":"","name":""}}` | Enterprise license key configuration for VictoriaMetrics enterprise. Required only for VictoriaMetrics enterprise. Documentation - https://docs.victoriametrics.com/enterprise.html, for more information, visit https://victoriametrics.com/products/enterprise/ . To request a trial license, go to https://victoriametrics.com/products/enterprise/trial/ Supported starting from VictoriaMetrics v1.94.0 |
 | license.key | string | `""` | License key |
 | license.secret | object | `{"key":"","name":""}` | Use existing secret with license key |
@@ -115,7 +117,6 @@ Change the values according to the need of the environment in ``victoria-metrics
 | rbac.create | bool | `true` |  |
 | rbac.extraLabels | object | `{}` |  |
 | rbac.namespaced | bool | `false` |  |
-| rbac.pspEnabled | bool | `true` |  |
 | serviceAccount.automountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.extraLabels | object | `{}` |  |
@@ -124,7 +125,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vminsert.automountServiceAccountToken | bool | `true` |  |
 | vminsert.containerWorkingDir | string | `""` | Container workdir |
 | vminsert.enabled | bool | `true` | Enable deployment of vminsert component. Deployment is used |
-| vminsert.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| vminsert.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | vminsert.envFrom | list | `[]` |  |
 | vminsert.extraArgs."envflag.enable" | string | `"true"` |  |
 | vminsert.extraArgs."envflag.prefix" | string | `"VM_"` |  |
@@ -140,9 +141,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vminsert.horizontalPodAutoscaler.metrics | list | `[]` | Metric for HPA to use to scale the vminsert component |
 | vminsert.horizontalPodAutoscaler.minReplicas | int | `2` | Minimum replicas for HPA to use to scale the vminsert component |
 | vminsert.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
+| vminsert.image.registry | string | `""` | Image registry |
 | vminsert.image.repository | string | `"victoriametrics/vminsert"` | Image repository |
-| vminsert.image.tag | string | `"v1.101.0-cluster"` | Image tag override Chart.AppVersion     |
-| vminsert.image.variant | string | `""` |  |
+| vminsert.image.tag | string | `""` | Image tag override Chart.AppVersion     |
+| vminsert.image.variant | string | `"cluster"` |  |
 | vminsert.ingress.annotations | object | `{}` | Ingress annotations |
 | vminsert.ingress.enabled | bool | `false` | Enable deployment of ingress for vminsert component |
 | vminsert.ingress.extraLabels | object | `{}` |  |
@@ -161,11 +163,16 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vminsert.probe.liveness.failureThreshold | int | `3` |  |
 | vminsert.probe.liveness.initialDelaySeconds | int | `5` |  |
 | vminsert.probe.liveness.periodSeconds | int | `15` |  |
+| vminsert.probe.liveness.tcpSocket.port | string | `"{{ dig \"ports\" \"name\" \"http\" (.app | dict) }}"` |  |
 | vminsert.probe.liveness.timeoutSeconds | int | `5` |  |
 | vminsert.probe.readiness.failureThreshold | int | `3` |  |
+| vminsert.probe.readiness.httpGet.path | string | `"{{ index .app.extraArgs \"http.pathPrefix\" | default \"\" | trimSuffix \"/\" }}/health"` |  |
+| vminsert.probe.readiness.httpGet.port | string | `"{{ dig \"ports\" \"name\" \"http\" (.app | dict) }}"` |  |
+| vminsert.probe.readiness.httpGet.scheme | string | `"{{ ternary \"HTTPS\" \"HTTP\" (.app.extraArgs.tls | default false) }}"` |  |
 | vminsert.probe.readiness.initialDelaySeconds | int | `5` |  |
 | vminsert.probe.readiness.periodSeconds | int | `15` |  |
 | vminsert.probe.readiness.timeoutSeconds | int | `5` |  |
+| vminsert.probe.startup | object | `{}` |  |
 | vminsert.replicaCount | int | `2` | Count of vminsert pods |
 | vminsert.resources | object | `{}` | Resource object |
 | vminsert.securityContext | object | `{"enabled":false}` | Pod's security context. Ref: [https://kubernetes.io/docs/tasks/configure-pod-container/security-context/](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) |
@@ -181,6 +188,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vminsert.service.type | string | `"ClusterIP"` | Service type |
 | vminsert.service.udp | bool | `false` | Make sure that service is not type "LoadBalancer", as it requires "MixedProtocolLBService" feature gate. ref: https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/ |
 | vminsert.serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| vminsert.serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
 | vminsert.serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for vminsert component. This is Prometheus operator object |
 | vminsert.serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
 | vminsert.serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
@@ -195,10 +203,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmselect.automountServiceAccountToken | bool | `true` |  |
 | vmselect.cacheMountPath | string | `"/cache"` | Cache root folder |
 | vmselect.containerWorkingDir | string | `""` | Container workdir |
+| vmselect.emptyDir | object | `{}` |  |
 | vmselect.enabled | bool | `true` | Enable deployment of vmselect component. Can be deployed as Deployment(default) or StatefulSet |
-| vmselect.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| vmselect.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | vmselect.envFrom | list | `[]` |  |
-| vmselect.extraArgs."envflag.enable" | string | `"true"` |  |
+| vmselect.extraArgs."envflag.enable" | bool | `true` |  |
 | vmselect.extraArgs."envflag.prefix" | string | `"VM_"` |  |
 | vmselect.extraArgs.loggerFormat | string | `"json"` |  |
 | vmselect.extraContainers | list | `[]` |  |
@@ -213,9 +222,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmselect.horizontalPodAutoscaler.metrics | list | `[]` | Metric for HPA to use to scale the vmselect component |
 | vmselect.horizontalPodAutoscaler.minReplicas | int | `2` | Minimum replicas for HPA to use to scale the vmselect component |
 | vmselect.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
+| vmselect.image.registry | string | `""` | Image registry |
 | vmselect.image.repository | string | `"victoriametrics/vmselect"` | Image repository |
-| vmselect.image.tag | string | `"v1.101.0-cluster"` | Image tag override Chart.AppVersion |
-| vmselect.image.variant | string | `""` |  |
+| vmselect.image.tag | string | `""` | Image tag override Chart.AppVersion |
+| vmselect.image.variant | string | `"cluster"` |  |
 | vmselect.ingress.annotations | object | `{}` | Ingress annotations |
 | vmselect.ingress.enabled | bool | `false` | Enable deployment of ingress for vmselect component |
 | vmselect.ingress.extraLabels | object | `{}` |  |
@@ -241,11 +251,16 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmselect.probe.liveness.failureThreshold | int | `3` |  |
 | vmselect.probe.liveness.initialDelaySeconds | int | `5` |  |
 | vmselect.probe.liveness.periodSeconds | int | `15` |  |
+| vmselect.probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
 | vmselect.probe.liveness.timeoutSeconds | int | `5` |  |
 | vmselect.probe.readiness.failureThreshold | int | `3` |  |
+| vmselect.probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| vmselect.probe.readiness.httpGet.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| vmselect.probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
 | vmselect.probe.readiness.initialDelaySeconds | int | `5` |  |
 | vmselect.probe.readiness.periodSeconds | int | `15` |  |
 | vmselect.probe.readiness.timeoutSeconds | int | `5` |  |
+| vmselect.probe.startup | object | `{}` |  |
 | vmselect.replicaCount | int | `2` | Count of vmselect pods |
 | vmselect.resources | object | `{}` | Resource object |
 | vmselect.securityContext | object | `{"enabled":true}` | Pod's security context. Ref: [https://kubernetes.io/docs/tasks/configure-pod-container/security-context/](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
@@ -260,6 +275,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmselect.service.targetPort | string | `"http"` | Target port |
 | vmselect.service.type | string | `"ClusterIP"` | Service type |
 | vmselect.serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| vmselect.serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
 | vmselect.serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for vmselect component. This is Prometheus operator object |
 | vmselect.serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
 | vmselect.serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
@@ -278,8 +294,9 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.annotations | object | `{}` |  |
 | vmstorage.automountServiceAccountToken | bool | `true` |  |
 | vmstorage.containerWorkingDir | string | `""` | Container workdir |
+| vmstorage.emptyDir | object | `{}` |  |
 | vmstorage.enabled | bool | `true` | Enable deployment of vmstorage component. StatefulSet is used |
-| vmstorage.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| vmstorage.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | vmstorage.envFrom | list | `[]` |  |
 | vmstorage.extraArgs."envflag.enable" | string | `"true"` |  |
 | vmstorage.extraArgs."envflag.prefix" | string | `"VM_"` |  |
@@ -292,9 +309,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.extraVolumes | list | `[]` |  |
 | vmstorage.fullnameOverride | string | `nil` | Overrides the full name of vmstorage component |
 | vmstorage.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
+| vmstorage.image.registry | string | `""` | Image registry |
 | vmstorage.image.repository | string | `"victoriametrics/vmstorage"` | Image repository |
-| vmstorage.image.tag | string | `"v1.101.0-cluster"` | Image tag override Chart.AppVersion |
-| vmstorage.image.variant | string | `""` |  |
+| vmstorage.image.tag | string | `""` | Image tag override Chart.AppVersion |
+| vmstorage.image.variant | string | `"cluster"` |  |
 | vmstorage.initContainers | list | `[]` |  |
 | vmstorage.name | string | `"vmstorage"` | vmstorage container name |
 | vmstorage.nodeSelector | object | `{}` | Pod's node selector. Ref: [https://kubernetes.io/docs/user-guide/node-selection/](https://kubernetes.io/docs/user-guide/node-selection/) |
@@ -317,14 +335,16 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.probe.liveness.failureThreshold | int | `10` |  |
 | vmstorage.probe.liveness.initialDelaySeconds | int | `30` |  |
 | vmstorage.probe.liveness.periodSeconds | int | `30` |  |
-| vmstorage.probe.liveness.tcpSocket.port | string | `"http"` |  |
+| vmstorage.probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
 | vmstorage.probe.liveness.timeoutSeconds | int | `5` |  |
 | vmstorage.probe.readiness.failureThreshold | int | `3` |  |
-| vmstorage.probe.readiness.httpGet.path | string | `"/health"` |  |
-| vmstorage.probe.readiness.httpGet.port | string | `"http"` |  |
+| vmstorage.probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| vmstorage.probe.readiness.httpGet.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| vmstorage.probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
 | vmstorage.probe.readiness.initialDelaySeconds | int | `5` |  |
 | vmstorage.probe.readiness.periodSeconds | int | `15` |  |
 | vmstorage.probe.readiness.timeoutSeconds | int | `5` |  |
+| vmstorage.probe.startup | object | `{}` |  |
 | vmstorage.replicaCount | int | `2` | Count of vmstorage pods |
 | vmstorage.resources | object | `{}` | Resource object. Ref: [https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) |
 | vmstorage.retentionPeriod | int | `1` | Data retention period. Supported values 1w, 1d, number without measurement means month, e.g. 2 = 2month |
@@ -336,6 +356,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.service.vminsertPort | int | `8400` | Port for accepting connections from vminsert |
 | vmstorage.service.vmselectPort | int | `8401` | Port for accepting connections from vmselect |
 | vmstorage.serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| vmstorage.serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
 | vmstorage.serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for vmstorage component. This is Prometheus operator object |
 | vmstorage.serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
 | vmstorage.serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
@@ -350,26 +371,29 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.vmbackupmanager.disableMonthly | bool | `false` | disable monthly backups |
 | vmstorage.vmbackupmanager.disableWeekly | bool | `false` | disable weekly backups |
 | vmstorage.vmbackupmanager.enable | bool | `false` | enable automatic creation of backup via vmbackupmanager. vmbackupmanager is part of Enterprise packages |
-| vmstorage.vmbackupmanager.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| vmstorage.vmbackupmanager.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | vmstorage.vmbackupmanager.eula | bool | `false` | should be true and means that you have the legal right to run a backup manager that can either be a signed contract or an email with confirmation to run the service in a trial period # https://victoriametrics.com/legal/esa/ |
 | vmstorage.vmbackupmanager.extraArgs."envflag.enable" | string | `"true"` |  |
 | vmstorage.vmbackupmanager.extraArgs."envflag.prefix" | string | `"VM_"` |  |
 | vmstorage.vmbackupmanager.extraArgs.loggerFormat | string | `"json"` |  |
 | vmstorage.vmbackupmanager.extraSecretMounts | list | `[]` |  |
+| vmstorage.vmbackupmanager.image.registry | string | `""` | vmbackupmanager image registry |
 | vmstorage.vmbackupmanager.image.repository | string | `"victoriametrics/vmbackupmanager"` | vmbackupmanager image repository |
-| vmstorage.vmbackupmanager.image.tag | string | `"v1.101.0-enterprise"` | vmbackupmanager image tag override Chart.AppVersion |
-| vmstorage.vmbackupmanager.image.variant | string | `""` |  |
-| vmstorage.vmbackupmanager.livenessProbe.failureThreshold | int | `10` |  |
-| vmstorage.vmbackupmanager.livenessProbe.initialDelaySeconds | int | `30` |  |
-| vmstorage.vmbackupmanager.livenessProbe.periodSeconds | int | `30` |  |
-| vmstorage.vmbackupmanager.livenessProbe.tcpSocket.port | string | `"manager-http"` |  |
-| vmstorage.vmbackupmanager.livenessProbe.timeoutSeconds | int | `5` |  |
-| vmstorage.vmbackupmanager.readinessProbe.failureThreshold | int | `3` |  |
-| vmstorage.vmbackupmanager.readinessProbe.httpGet.path | string | `"/health"` |  |
-| vmstorage.vmbackupmanager.readinessProbe.httpGet.port | string | `"manager-http"` |  |
-| vmstorage.vmbackupmanager.readinessProbe.initialDelaySeconds | int | `5` |  |
-| vmstorage.vmbackupmanager.readinessProbe.periodSeconds | int | `15` |  |
-| vmstorage.vmbackupmanager.readinessProbe.timeoutSeconds | int | `5` |  |
+| vmstorage.vmbackupmanager.image.tag | string | `""` | vmbackupmanager image tag override Chart.AppVersion |
+| vmstorage.vmbackupmanager.image.variant | string | `"cluster"` |  |
+| vmstorage.vmbackupmanager.probe.liveness.failureThreshold | int | `10` |  |
+| vmstorage.vmbackupmanager.probe.liveness.initialDelaySeconds | int | `30` |  |
+| vmstorage.vmbackupmanager.probe.liveness.periodSeconds | int | `30` |  |
+| vmstorage.vmbackupmanager.probe.liveness.tcpSocket.port | string | `"manager-http"` |  |
+| vmstorage.vmbackupmanager.probe.liveness.timeoutSeconds | int | `5` |  |
+| vmstorage.vmbackupmanager.probe.readiness.failureThreshold | int | `3` |  |
+| vmstorage.vmbackupmanager.probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| vmstorage.vmbackupmanager.probe.readiness.httpGet.port | string | `"manager-http"` |  |
+| vmstorage.vmbackupmanager.probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
+| vmstorage.vmbackupmanager.probe.readiness.initialDelaySeconds | int | `5` |  |
+| vmstorage.vmbackupmanager.probe.readiness.periodSeconds | int | `15` |  |
+| vmstorage.vmbackupmanager.probe.readiness.timeoutSeconds | int | `5` |  |
+| vmstorage.vmbackupmanager.probe.startup | object | `{}` |  |
 | vmstorage.vmbackupmanager.resources | object | `{}` |  |
 | vmstorage.vmbackupmanager.restore | object | `{"onStart":{"enabled":false}}` | Allows to enable restore options for pod. Read more: https://docs.victoriametrics.com/vmbackupmanager.html#restore-commands |
 | vmstorage.vmbackupmanager.retention | object | `{"keepLastDaily":2,"keepLastHourly":2,"keepLastMonthly":2,"keepLastWeekly":2}` | backups' retention settings |

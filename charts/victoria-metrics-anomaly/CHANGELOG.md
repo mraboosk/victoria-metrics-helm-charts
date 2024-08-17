@@ -2,7 +2,27 @@
 
 ## Next release
 
-- TODO
+- Set minimal kubernetes version to 1.25
+- Added global imagePullSecrets and image.registry
+
+## 1.4.1
+
+**Release date:** 2024-08-15
+
+![AppVersion: v1.15.4](https://img.shields.io/static/v1?label=AppVersion&message=v1.15.4&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Update vmanomaly to [v1.15.4](https://docs.victoriametrics.com/anomaly-detection/changelog/#v1154).
+
+## 1.4.0
+
+**Release date:** 2024-08-14
+
+![AppVersion: v1.15.3](https://img.shields.io/static/v1?label=AppVersion&message=v1.15.3&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Update vmanomaly to [v1.15.3](https://docs.victoriametrics.com/anomaly-detection/changelog/#v1153).
+- Update configuration example format to match the latest version of vmanomaly.
 
 ## 1.3.4
 

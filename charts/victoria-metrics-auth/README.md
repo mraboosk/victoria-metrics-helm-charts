@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Auth.
 
- ![Version: 0.4.13](https://img.shields.io/badge/Version-0.4.13-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.4.14](https://img.shields.io/badge/Version-0.4.14-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-auth)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -100,7 +100,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | annotations | object | `{}` | Annotations to be added to the deployment |
 | config | string | `nil` | Config file content. |
 | containerWorkingDir | string | `"/"` |  |
-| env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | envFrom | list | `[]` |  |
 | extraArgs."envflag.enable" | string | `"true"` |  |
 | extraArgs."envflag.prefix" | string | `"VM_"` |  |
@@ -113,7 +113,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | extraVolumes | list | `[]` | Extra Volumes for the pod |
 | fullnameOverride | string | `""` |  |
 | global.compatibility.openshift.adaptSecurityContext | string | `"auto"` |  |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | image.pullPolicy | string | `"IfNotPresent"` | Pull policy of Docker image |
+| image.registry | string | `""` | Image registry |
 | image.repository | string | `"victoriametrics/vmauth"` | Victoria Metrics Auth Docker repository and image name |
 | image.tag | string | `""` | Tag of Docker image |
 | image.variant | string | `""` |  |
@@ -140,9 +143,16 @@ Change the values according to the need of the environment in ``victoria-metrics
 | podAnnotations | object | `{}` | Annotations to be added to pod |
 | podDisruptionBudget | object | `{"enabled":false,"labels":{}}` | See `kubectl explain poddisruptionbudget.spec` for more. Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/ |
 | podSecurityContext.enabled | bool | `true` |  |
+| probe.liveness.initialDelaySeconds | int | `5` |  |
+| probe.liveness.periodSeconds | int | `15` |  |
+| probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| probe.liveness.timeoutSeconds | int | `5` |  |
+| probe.readiness.initialDelaySeconds | int | `5` |  |
+| probe.readiness.periodSeconds | int | `15` |  |
+| probe.readiness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| probe.startup | object | `{}` |  |
 | rbac.annotations | object | `{}` |  |
 | rbac.extraLabels | object | `{}` |  |
-| rbac.pspEnabled | bool | `true` |  |
 | replicaCount | int | `1` | Number of replicas of vmauth |
 | resources | object | `{}` | We usually recommend not to specify default resources and to leave this as a conscious choice for the user. This also increases chances charts run on environments with little resources, such as Minikube. If you do want to specify resources, uncomment the following lines, adjust them as necessary, and remove the curly braces after 'resources:'. |
 | secretName | string | `""` | Use existing secret if specified otherwise .config values will be used. Ref: https://victoriametrics.github.io/vmauth.html. Configuration in the given secret must be stored under `auth.yml` key. |
@@ -159,9 +169,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `nil` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| serviceMonitor.annotations | object | `{}` |  |
-| serviceMonitor.enabled | bool | `false` |  |
-| serviceMonitor.extraLabels | object | `{}` |  |
-| serviceMonitor.metricRelabelings | list | `[]` |  |
-| serviceMonitor.relabelings | list | `[]` |  |
+| serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
+| serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for server component. This is Prometheus operator object |
+| serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
+| serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
+| serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |
 | tolerations | list | `[]` | Tolerations configurations. Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |

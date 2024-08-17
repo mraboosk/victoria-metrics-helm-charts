@@ -2,7 +2,28 @@
 
 ## Next release
 
-- TODO
+- Added basicAuth support for ServiceMonitor
+- fix inconsistent relabeling `target_label` in default scrape config.
+- Removed PodSecurityPolicy
+- Removed support for policy/v1beta1/PodDisruptionBudget
+- Set minimal kubernetes version to 1.25
+- Added ability to override liveness and readiness probes
+- Updated `.Values.vmbackupmanager.readinessProbe` to `.Values.vmbackupmanager.probe.readiness`
+- Updated `.Values.vmbackupmanager.livenessProbe` to `.Values.vmbackupmanager.probe.liveness`
+- Updated `.Values.vmbackupmanager.startupProbe` to `.Values.vmbackupmanager.probe.startup`
+- Updated `.Values.server.readinessProbe` to `.Values.server.probe.readiness`
+- Updated `.Values.server.livenessProbe` to `.Values.server.probe.liveness`
+- Updated `.Values.server.startupProbe` to `.Values.server.probe.startup`
+- Added global imagePullSecrets and image.registry
+
+## 0.9.26
+
+**Release date:** 2024-08-01
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- bump version of VM components to [v1.102.1](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.102.1)
 
 ## 0.9.25
 

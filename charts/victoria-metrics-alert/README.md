@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Alert.
 
- ![Version: 0.9.11](https://img.shields.io/badge/Version-0.9.11-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.9.12](https://img.shields.io/badge/Version-0.9.12-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-alert)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -113,6 +113,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | alertmanager.config.route.receiver | string | `"devnull"` |  |
 | alertmanager.config.route.repeat_interval | string | `"24h"` |  |
 | alertmanager.configMap | string | `""` |  |
+| alertmanager.emptyDir | object | `{}` |  |
 | alertmanager.enabled | bool | `false` |  |
 | alertmanager.envFrom | list | `[]` |  |
 | alertmanager.extraArgs | object | `{}` |  |
@@ -120,7 +121,9 @@ Change the values according to the need of the environment in ``victoria-metrics
 | alertmanager.extraHostPathMounts | list | `[]` |  |
 | alertmanager.extraVolumeMounts | list | `[]` |  |
 | alertmanager.extraVolumes | list | `[]` |  |
-| alertmanager.image | string | `"prom/alertmanager"` |  |
+| alertmanager.image.registry | string | `""` |  |
+| alertmanager.image.repository | string | `"prom/alertmanager"` |  |
+| alertmanager.image.tag | string | `"v0.25.0"` |  |
 | alertmanager.imagePullSecrets | list | `[]` |  |
 | alertmanager.ingress.annotations | object | `{}` |  |
 | alertmanager.ingress.enabled | bool | `false` |  |
@@ -142,17 +145,24 @@ Change the values according to the need of the environment in ``victoria-metrics
 | alertmanager.podMetadata.labels | object | `{}` |  |
 | alertmanager.podSecurityContext.enabled | bool | `false` |  |
 | alertmanager.priorityClassName | string | `""` |  |
+| alertmanager.probe.liveness.httpGet.path | string | `"{{ ternary \"\" .baseURLPrefix (empty .baseURLPrefix) }}/-/healthy"` |  |
+| alertmanager.probe.liveness.httpGet.port | string | `"web"` |  |
+| alertmanager.probe.readiness.httpGet.path | string | `"{{ ternary \"\" .baseURLPrefix (empty .baseURLPrefix) }}/-/ready"` |  |
+| alertmanager.probe.readiness.httpGet.port | string | `"web"` |  |
+| alertmanager.probe.startup.httpGet.path | string | `"{{ ternary \"\" .baseURLPrefix (empty .baseURLPrefix) }}/-/ready"` |  |
+| alertmanager.probe.startup.httpGet.port | string | `"web"` |  |
 | alertmanager.resources | object | `{}` |  |
 | alertmanager.retention | string | `"120h"` |  |
 | alertmanager.securityContext.enabled | bool | `false` |  |
 | alertmanager.service.annotations | object | `{}` |  |
 | alertmanager.service.port | int | `9093` |  |
 | alertmanager.service.type | string | `"ClusterIP"` |  |
-| alertmanager.tag | string | `"v0.25.0"` |  |
 | alertmanager.templates | object | `{}` |  |
 | alertmanager.tolerations | list | `[]` |  |
 | extraObjects | list | `[]` | Add extra specs dynamically to this chart |
 | global.compatibility.openshift.adaptSecurityContext | string | `"auto"` |  |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | license | object | `{"key":"","secret":{"key":"","name":""}}` | Enterprise license key configuration for VictoriaMetrics enterprise. Required only for VictoriaMetrics enterprise. Documentation - https://docs.victoriametrics.com/enterprise.html, for more information, visit https://victoriametrics.com/products/enterprise/ . To request a trial license, go to https://victoriametrics.com/products/enterprise/trial/ Supported starting from VictoriaMetrics v1.94.0 |
 | license.key | string | `""` | License key |
 | license.secret | object | `{"key":"","name":""}` | Use existing secret with license key |
@@ -162,7 +172,6 @@ Change the values according to the need of the environment in ``victoria-metrics
 | rbac.create | bool | `true` |  |
 | rbac.extraLabels | object | `{}` |  |
 | rbac.namespaced | bool | `false` |  |
-| rbac.pspEnabled | bool | `true` |  |
 | server.affinity | object | `{}` |  |
 | server.annotations | object | `{}` |  |
 | server.config.alerts.groups | list | `[]` |  |
@@ -172,7 +181,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | server.datasource.bearer.tokenFile | string | `""` | Token Auth file with Bearer token. You can use one of token or tokenFile |
 | server.datasource.url | string | `""` |  |
 | server.enabled | bool | `true` |  |
-| server.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| server.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | server.envFrom | list | `[]` |  |
 | server.extraArgs."envflag.enable" | string | `"true"` |  |
 | server.extraArgs."envflag.prefix" | string | `"VM_"` |  |
@@ -183,6 +192,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | server.extraVolumes | list | `[]` | Extra Volumes for the pod |
 | server.fullnameOverride | string | `""` |  |
 | server.image.pullPolicy | string | `"IfNotPresent"` |  |
+| server.image.registry | string | `""` |  |
 | server.image.repository | string | `"victoriametrics/vmalert"` |  |
 | server.image.tag | string | `""` |  |
 | server.image.variant | string | `""` |  |
@@ -212,11 +222,16 @@ Change the values according to the need of the environment in ``victoria-metrics
 | server.probe.liveness.failureThreshold | int | `3` |  |
 | server.probe.liveness.initialDelaySeconds | int | `5` |  |
 | server.probe.liveness.periodSeconds | int | `15` |  |
+| server.probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
 | server.probe.liveness.timeoutSeconds | int | `5` |  |
 | server.probe.readiness.failureThreshold | int | `3` |  |
+| server.probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| server.probe.readiness.httpGet.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| server.probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
 | server.probe.readiness.initialDelaySeconds | int | `5` |  |
 | server.probe.readiness.periodSeconds | int | `15` |  |
 | server.probe.readiness.timeoutSeconds | int | `5` |  |
+| server.probe.startup | object | `{}` |  |
 | server.remote.read.basicAuth | object | `{"password":"","username":""}` | Basic auth for remote read |
 | server.remote.read.bearer.token | string | `""` | Token with Bearer token. You can use one of token or tokenFile. You don't need to add "Bearer" prefix string |
 | server.remote.read.bearer.tokenFile | string | `""` | Token Auth file with Bearer token. You can use one of token or tokenFile |
@@ -247,8 +262,9 @@ Change the values according to the need of the environment in ``victoria-metrics
 | serviceAccount.automountToken | bool | `true` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `nil` |  |
-| serviceMonitor.annotations | object | `{}` |  |
-| serviceMonitor.enabled | bool | `false` |  |
-| serviceMonitor.extraLabels | object | `{}` |  |
-| serviceMonitor.metricRelabelings | list | `[]` |  |
-| serviceMonitor.relabelings | list | `[]` |  |
+| serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
+| serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for server component. This is Prometheus operator object |
+| serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
+| serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
+| serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |

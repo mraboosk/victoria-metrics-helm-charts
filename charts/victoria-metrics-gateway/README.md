@@ -1,6 +1,6 @@
 # Victoria Metrics Helm Chart for vmgateway
 
- ![Version: 0.1.63](https://img.shields.io/badge/Version-0.1.63-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.1.64](https://img.shields.io/badge/Version-0.1.64-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-gateway)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -182,9 +182,12 @@ Change the values according to the need of the environment in ``victoria-metrics
 | extraVolumes | list | `[]` | Extra Volumes for the pod |
 | fullnameOverride | string | `""` |  |
 | global.compatibility.openshift.adaptSecurityContext | string | `"auto"` |  |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | image.pullPolicy | string | `"IfNotPresent"` | Pull policy of Docker image |
+| image.registry | string | `""` | Victoria Metrics gateway Docker registry |
 | image.repository | string | `"victoriametrics/vmgateway"` | Victoria Metrics gateway Docker repository and image name |
-| image.tag | string | `"v1.101.0-enterprise"` | Tag of Docker image override Chart.AppVersion |
+| image.tag | string | `""` | Tag of Docker image override Chart.AppVersion |
 | image.variant | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations | object | `{}` |  |
@@ -203,6 +206,16 @@ Change the values according to the need of the environment in ``victoria-metrics
 | podAnnotations | object | `{}` | Annotations to be added to pod |
 | podDisruptionBudget | object | `{"enabled":false,"labels":{}}` | See `kubectl explain poddisruptionbudget.spec` for more. Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/ |
 | podSecurityContext.enabled | bool | `true` |  |
+| probe.liveness.initialDelaySeconds | int | `5` |  |
+| probe.liveness.periodSeconds | int | `15` |  |
+| probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| probe.liveness.timeoutSeconds | int | `5` |  |
+| probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| probe.readiness.httpGet.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
+| probe.readiness.initialDelaySeconds | int | `5` |  |
+| probe.readiness.periodSeconds | int | `15` |  |
+| probe.startup | object | `{}` |  |
 | rateLimiter | object | `{"config":{},"datasource":{"url":""},"enable":false}` | Rate limiter configuration. Docs https://docs.victoriametrics.com/vmgateway.html#rate-limiter |
 | rateLimiter.datasource.url | string | `""` | Datasource VictoriaMetrics or vmselects. Required. Example http://victoroametrics:8428 or http://vmselect:8481/select/0/prometheus |
 | rateLimiter.enable | bool | `false` | Enable/Disable rate-limiting |
@@ -225,10 +238,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `nil` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| serviceMonitor.annotations | object | `{}` |  |
-| serviceMonitor.enabled | bool | `false` |  |
-| serviceMonitor.extraLabels | object | `{}` |  |
-| serviceMonitor.metricRelabelings | list | `[]` |  |
-| serviceMonitor.relabelings | list | `[]` |  |
+| serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
+| serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for server component. This is Prometheus operator object |
+| serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
+| serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
+| serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |
 | tolerations | list | `[]` | Tolerations configurations. Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/ |
 | write.url | string | `""` | Write endpoint without suffixes, victoriametrics or vminsert. Example http://victoroametrics:8428 or http://vminsert:8480 |

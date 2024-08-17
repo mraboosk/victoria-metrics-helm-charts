@@ -4,17 +4,13 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: {{ ternary "RoleBinding" "ClusterRoleBinding" $namespaced }}
 metadata:
   name: {{ template "chart.fullname" . }}{{- ternary "" "-clusterrolebinding" $namespaced }}
-  {{- if not $namespaced }}
+  {{- if $namespaced }}
   namespace: {{ .Release.Namespace }}
   {{- end }}
-  labels:
-    {{- include "chart.labels" . | nindent 4 }}
-{{- with .Values.rbac.extraLabels }}
-{{ toYaml . | indent 4}}
-{{- end }}
+  {{- $ctx := merge (deepCopy .) (dict "extraLabels" .Values.rbac.extraLabels) }}
+  labels: {{ include "chart.labels" $ctx | nindent 4 }}
   {{- with .Values.rbac.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
+  annotations: {{ toYaml . | nindent 4 }}
   {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io

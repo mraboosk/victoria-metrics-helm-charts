@@ -128,6 +128,8 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | fluent-bit.enabled | bool | `false` | Enable deployment of fluent-bit |
 | fluent-bit.resources | object | `{}` |  |
 | global.compatibility.openshift.adaptSecurityContext | string | `"auto"` |  |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | global.nameOverride | string | `""` |  |
 | global.victoriaLogs.server.fullnameOverride | string | `nil` | Overrides the full name of server component |
 | global.victoriaLogs.server.name | string | `"server"` | Server container name |
@@ -136,6 +138,7 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | printNotes | bool | `true` | Print chart notes |
 | server.affinity | object | `{}` | Pod affinity |
 | server.containerWorkingDir | string | `""` | Container workdir |
+| server.emptyDir | object | `{}` |  |
 | server.enabled | bool | `true` | Enable deployment of server component. Deployed as StatefulSet |
 | server.env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
 | server.envFrom | list | `[]` |  |
@@ -148,8 +151,11 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.extraVolumeMounts | list | `[]` |  |
 | server.extraVolumes | list | `[]` |  |
 | server.image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
+| server.image.registry | string | `""` | Image registry |
 | server.image.repository | string | `"victoriametrics/victoria-logs"` | Image repository |
-| server.image.tag | string | `"v0.28.0-victorialogs"` | Image tag |
+| server.image.tag | string | `""` | Image tag |
+| server.image.variant | string | `"victorialogs"` |  |
+| server.imagePullSecrets | list | `[]` | Image pull secrets |
 | server.ingress.annotations | string | `nil` | Ingress annotations |
 | server.ingress.enabled | bool | `false` | Enable deployment of ingress for server component |
 | server.ingress.extraLabels | object | `{}` | Ingress extra labels |
@@ -157,13 +163,6 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.ingress.pathType | string | `"Prefix"` | pathType is only for k8s >= 1.1= |
 | server.ingress.tls | list | `[]` | Array of TLS objects |
 | server.initContainers | list | `[]` |  |
-| server.livenessProbe.failureThreshold | int | `10` |  |
-| server.livenessProbe.httpGet.path | string | `"/health"` |  |
-| server.livenessProbe.httpGet.port | int | `9428` |  |
-| server.livenessProbe.httpGet.scheme | string | `"HTTP"` |  |
-| server.livenessProbe.initialDelaySeconds | int | `30` |  |
-| server.livenessProbe.periodSeconds | int | `30` |  |
-| server.livenessProbe.timeoutSeconds | int | `5` |  |
 | server.nodeSelector | object | `{}` | Pod's node selector. Ref: [https://kubernetes.io/docs/user-guide/node-selection/](https://kubernetes.io/docs/user-guide/node-selection/) |
 | server.persistentVolume.accessModes | list | `["ReadWriteOnce"]` | Array of access modes. Must match those of existing PV or dynamic provisioner. Ref: [http://kubernetes.io/docs/user-guide/persistent-volumes/](http://kubernetes.io/docs/user-guide/persistent-volumes/) |
 | server.persistentVolume.annotations | object | `{}` | Persistant volume annotations |
@@ -179,12 +178,19 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.podManagementPolicy | string | `"OrderedReady"` | Pod's management policy |
 | server.podSecurityContext | object | `{"enabled":true,"fsGroup":2000,"runAsNonRoot":true,"runAsUser":1000}` | Pod's security context. Ref: [https://kubernetes.io/docs/tasks/configure-pod-container/security-context/](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) |
 | server.priorityClassName | string | `""` | Name of Priority Class |
-| server.readinessProbe.failureThreshold | int | `3` |  |
-| server.readinessProbe.httpGet.path | string | `"/health"` |  |
-| server.readinessProbe.httpGet.port | string | `"http"` |  |
-| server.readinessProbe.initialDelaySeconds | int | `5` |  |
-| server.readinessProbe.periodSeconds | int | `15` |  |
-| server.readinessProbe.timeoutSeconds | int | `5` |  |
+| server.probe.liveness.failureThreshold | int | `10` |  |
+| server.probe.liveness.initialDelaySeconds | int | `30` |  |
+| server.probe.liveness.periodSeconds | int | `30` |  |
+| server.probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| server.probe.liveness.timeoutSeconds | int | `5` |  |
+| server.probe.readiness.failureThreshold | int | `3` |  |
+| server.probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| server.probe.readiness.httpGet.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| server.probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
+| server.probe.readiness.initialDelaySeconds | int | `5` |  |
+| server.probe.readiness.periodSeconds | int | `15` |  |
+| server.probe.readiness.timeoutSeconds | int | `5` |  |
+| server.probe.startup | object | `{}` |  |
 | server.resources | object | `{}` | Resource object. Ref: [http://kubernetes.io/docs/user-guide/compute-resources/](http://kubernetes.io/docs/user-guide/compute-resources/ |
 | server.retentionPeriod | int | `1` | Data retention period in month |
 | server.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"enabled":true,"readOnlyRootFilesystem":true}` | Security context to be added to server pods |
@@ -197,11 +203,11 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.service.servicePort | int | `9428` | Service port |
 | server.service.type | string | `"ClusterIP"` | Service type |
 | server.serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| server.serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
 | server.serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for server component. This is Prometheus operator object |
 | server.serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
 | server.serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
 | server.serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |
-| server.startupProbe | object | `{}` |  |
 | server.statefulSet.enabled | bool | `true` | Creates statefulset instead of deployment, useful when you want to keep the cache |
 | server.statefulSet.podManagementPolicy | string | `"OrderedReady"` | Deploy order policy for StatefulSet pods |
 | server.statefulSet.service.annotations | object | `{}` | Headless service annotations |

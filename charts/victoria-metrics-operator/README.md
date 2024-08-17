@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Operator.
 
- ![Version: 0.33.4](https://img.shields.io/badge/Version-0.33.4-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.34.0](https://img.shields.io/badge/Version-0.34.0-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-operator)
 
 Victoria Metrics Operator
@@ -161,7 +161,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | extraVolumeMounts | list | `[]` | Extra Volume Mounts for the container |
 | extraVolumes | list | `[]` | Extra Volumes for the pod |
 | fullnameOverride | string | `""` | Overrides the full name of server component |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
+| image.registry | string | `""` | Image registry |
 | image.repository | string | `"victoriametrics/operator"` | Image repository |
 | image.tag | string | `""` | Image tag override Chart.AppVersion |
 | image.variant | string | `""` |  |
@@ -177,6 +180,19 @@ Change the values according to the need of the environment in ``victoria-metrics
 | podDisruptionBudget.labels | object | `{}` |  |
 | podLabels | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
+| probe.liveness.failureThreshold | int | `3` |  |
+| probe.liveness.initialDelaySeconds | int | `5` |  |
+| probe.liveness.periodSeconds | int | `15` |  |
+| probe.liveness.tcpSocket.port | string | `"probe"` |  |
+| probe.liveness.timeoutSeconds | int | `5` |  |
+| probe.readiness.failureThreshold | int | `3` |  |
+| probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| probe.readiness.httpGet.port | string | `"probe"` |  |
+| probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
+| probe.readiness.initialDelaySeconds | int | `5` |  |
+| probe.readiness.periodSeconds | int | `15` |  |
+| probe.readiness.timeoutSeconds | int | `5` |  |
+| probe.startup | object | `{}` |  |
 | rbac.aggregatedClusterRoles | object | `{"enabled":true,"labels":{"admin":{"rbac.authorization.k8s.io/aggregate-to-admin":"true"},"view":{"rbac.authorization.k8s.io/aggregate-to-view":"true"}}}` | create aggregated clusterRoles for CRD readonly and admin permissions |
 | rbac.aggregatedClusterRoles.labels | object | `{"admin":{"rbac.authorization.k8s.io/aggregate-to-admin":"true"},"view":{"rbac.authorization.k8s.io/aggregate-to-view":"true"}}` | labels attached to according clusterRole |
 | rbac.create | bool | `true` | Specifies whether the RBAC resources should be created |

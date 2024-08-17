@@ -2,6 +2,9 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 global:
+  imagePullSecrets: []
+  image:
+    registry: ""
   compatibility:
     openshift:
       adaptSecurityContext: "auto"
@@ -10,6 +13,8 @@ global:
 replicaCount: 1
 
 image:
+  # -- Image registry
+  registry: ""
   # -- Victoria Metrics Auth Docker repository and image name
   repository: victoriametrics/vmauth
   # -- Tag of Docker image
@@ -27,8 +32,6 @@ fullnameOverride: ""
 containerWorkingDir: "/"
 
 rbac:
-  # Note: The PSP will only be deployed, if Kubernetes (<1.25) supports the resource.
-  pspEnabled: true
   annotations: {}
   extraLabels: {}
 
@@ -52,7 +55,7 @@ extraArgs:
   envflag.prefix: VM_
   loggerFormat: json
 
-# -- Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables
+# -- Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables
 env: []
 
 envFrom: []
@@ -188,10 +191,17 @@ tolerations: []
 affinity: {}
 
 serviceMonitor:
+  # -- Enable deployment of Service Monitor for server component. This is Prometheus operator object
   enabled: false
+  # -- Service Monitor labels
   extraLabels: {}
+  # -- Service Monitor annotations
   annotations: {}
+  # -- Service Monitor relabelings
   relabelings: []
+  # -- Basic auth params for Service Monitor
+  basicAuth: {}
+  # -- Service Monitor metricRelabelings
   metricRelabelings: []
 #    interval: 15s
 #    scrapeTimeout: 5s
@@ -238,6 +248,20 @@ config:
 
 # -- Add extra specs dynamically to this chart
 extraObjects: []
+
+probe:
+  readiness:
+    tcpSocket:
+      port: '{{ include "vm.probe.port" . }}'
+    initialDelaySeconds: 5
+    periodSeconds: 15
+  liveness:
+    tcpSocket:
+      port: '{{ include "vm.probe.port" . }}'
+    initialDelaySeconds: 5
+    periodSeconds: 15
+    timeoutSeconds: 5
+  startup: {}
 
 # -- Enterprise license key configuration for VictoriaMetrics enterprise.
 # Required only for VictoriaMetrics enterprise.

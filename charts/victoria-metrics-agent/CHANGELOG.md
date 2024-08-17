@@ -2,7 +2,40 @@
 
 ## Next release
 
-- TODO
+- Removed PodSecurityPolicy
+- Set minimal kubernetes version to 1.25
+- Removed support for policy/v1beta1/PodDisruptionBudget
+- Added params to configure probes `.Values.probe.readiness`, `.Values.probe.liveness` and `.Values.probe.startup`
+- Added global imagePullSecrets and image.registry
+- Added `.Values.emptyDir` to customize default cache directory
+
+## 0.10.14
+
+**Release date:** 2024-08-14
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- add basicAuth support for ServiceMonitor
+- fix license volume mount when using statefulset mode
+
+## 0.10.13
+
+**Release date:** 2024-08-01
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- bump version of VM components to [v1.102.1](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.102.1)
+
+## 0.10.12
+
+**Release date:** 2024-08-01
+
+![AppVersion: v1.102.0](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fix possible template error when `.Values.rbac.namespaced=true`. Thanks to @guptaachin for [the pull request](https://github.com/VictoriaMetrics/helm-charts/pull/1179).
 
 ## 0.10.11
 

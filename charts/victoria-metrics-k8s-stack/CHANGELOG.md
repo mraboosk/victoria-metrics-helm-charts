@@ -4,6 +4,42 @@
 
 - TODO
 
+## 0.25.0
+
+**Release date:** 2024-08-16
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- * Update Notes: it requires to update CRD dependency manually before upgrade
+- Moved dashboards templating logic out of sync script to Helm template
+- Allow to disable default grafana datasource
+- Synchronize Etcd dashboards and rules with mixin provided by Etcd
+- Add alerting rules for VictoriaMetrics operator.
+- Updated alerting rules for VictoriaMetrics components.
+- Fixed exact rule annotations propagation to other rules.
+- Set minimal kubernetes version to 1.25
+- updates operator to v0.47.0 version
+
+## 0.24.5
+
+**Release date:** 2024-08-01
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- bump version of VM components to [v1.102.1](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.102.1)
+
+## 0.24.4
+
+**Release date:** 2024-08-01
+
+![AppVersion: v1.102.0](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Update dependencies: grafana -> 8.3.6.
+- Added `.Values.defaultRules.alerting` and `.Values.defaultRules.recording` to setup common properties for all alerting an recording rules
+
 ## 0.24.3
 
 **Release date:** 2024-07-23
@@ -160,8 +196,6 @@
 
 ![AppVersion: v1.100.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.100.1&color=success&logo=)
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
-
-- TODO
 
 ## 0.21.0
 

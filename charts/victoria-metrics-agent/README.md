@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Agent.
 
- ![Version: 0.10.11](https://img.shields.io/badge/Version-0.10.11-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.10.14](https://img.shields.io/badge/Version-0.10.14-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-agent)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -280,7 +280,8 @@ Change the values according to the need of the environment in ``victoria-metrics
 | containerWorkingDir | string | `"/"` |  |
 | deployment.enabled | bool | `true` |  |
 | deployment.strategy | object | `{}` |  |
-| env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://github.com/VictoriaMetrics/VictoriaMetrics#environment-variables |
+| emptyDir | object | `{}` |  |
+| env | list | `[]` | Additional environment variables (ex.: secret tokens, flags) https://docs.victoriametrics.com/#environment-variables |
 | envFrom | list | `[]` |  |
 | extraArgs."envflag.enable" | string | `"true"` |  |
 | extraArgs."envflag.prefix" | string | `"VM_"` |  |
@@ -294,12 +295,15 @@ Change the values according to the need of the environment in ``victoria-metrics
 | extraVolumes | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | global.compatibility.openshift.adaptSecurityContext | string | `"auto"` |  |
+| global.image.registry | string | `""` |  |
+| global.imagePullSecrets | list | `[]` |  |
 | horizontalPodAutoscaling | object | `{"enabled":false,"maxReplicas":10,"metrics":[],"minReplicas":1}` | Horizontal Pod Autoscaling. Note that it is not intended to be used for vmagents which perform scraping. In order to scale scraping vmagents see: https://docs.victoriametrics.com/vmagent/#scraping-big-number-of-targets |
 | horizontalPodAutoscaling.enabled | bool | `false` | Use HPA for vmagent |
 | horizontalPodAutoscaling.maxReplicas | int | `10` | Maximum replicas for HPA to use to to scale vmagent |
 | horizontalPodAutoscaling.metrics | list | `[]` | Metric for HPA to use to scale vmagent |
 | horizontalPodAutoscaling.minReplicas | int | `1` | Minimum replicas for HPA to use to scale vmagent |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
+| image.registry | string | `""` |  |
 | image.repository | string | `"victoriametrics/vmagent"` |  |
 | image.tag | string | `""` |  |
 | image.variant | string | `""` |  |
@@ -332,11 +336,20 @@ Change the values according to the need of the environment in ``victoria-metrics
 | podLabels | object | `{}` |  |
 | podSecurityContext.enabled | bool | `true` |  |
 | priorityClassName | string | `""` | priority class to be assigned to the pod(s) |
+| probe.liveness.initialDelaySeconds | int | `5` |  |
+| probe.liveness.periodSeconds | int | `15` |  |
+| probe.liveness.tcpSocket.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| probe.liveness.timeoutSeconds | int | `5` |  |
+| probe.readiness.httpGet.path | string | `"{{ include \"vm.probe.http.path\" . }}"` |  |
+| probe.readiness.httpGet.port | string | `"{{ include \"vm.probe.port\" . }}"` |  |
+| probe.readiness.httpGet.scheme | string | `"{{ include \"vm.probe.http.scheme\" . }}"` |  |
+| probe.readiness.initialDelaySeconds | int | `5` |  |
+| probe.readiness.periodSeconds | int | `15` |  |
+| probe.startup | object | `{}` |  |
 | rbac.annotations | object | `{}` |  |
 | rbac.create | bool | `true` |  |
 | rbac.extraLabels | object | `{}` |  |
 | rbac.namespaced | bool | `false` | if true and `rbac.enabled`, will deploy a Role/Rolebinding instead of a ClusterRole/ClusterRoleBinding |
-| rbac.pspEnabled | bool | `true` |  |
 | remoteWriteUrls | list | `[]` |  |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
@@ -353,11 +366,12 @@ Change the values according to the need of the environment in ``victoria-metrics
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `nil` |  |
-| serviceMonitor.annotations | object | `{}` |  |
-| serviceMonitor.enabled | bool | `false` |  |
-| serviceMonitor.extraLabels | object | `{}` |  |
-| serviceMonitor.metricRelabelings | list | `[]` |  |
-| serviceMonitor.relabelings | list | `[]` |  |
+| serviceMonitor.annotations | object | `{}` | Service Monitor annotations |
+| serviceMonitor.basicAuth | object | `{}` | Basic auth params for Service Monitor |
+| serviceMonitor.enabled | bool | `false` | Enable deployment of Service Monitor for server component. This is Prometheus operator object |
+| serviceMonitor.extraLabels | object | `{}` | Service Monitor labels |
+| serviceMonitor.metricRelabelings | list | `[]` | Service Monitor metricRelabelings |
+| serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |
 | statefulset.clusterMode | bool | `false` | create cluster of vmagents. See https://docs.victoriametrics.com/vmagent.html#scraping-big-number-of-targets available since 1.77.2 version https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.77.2 |
 | statefulset.enabled | bool | `false` |  |
 | statefulset.replicationFactor | int | `1` | replication factor for vmagent in cluster mode |

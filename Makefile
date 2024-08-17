@@ -1,12 +1,13 @@
 URL=https://victoriametrics.github.io/helm-charts/
-HELM_IMAGE = alpine/helm:3.12.3
-HELM_DOCS_IMAGE = jnorwood/helm-docs:v1.11.0
-PYTHON_IMAGE = python:3.11.5-alpine3.18
-CT_IMAGE = quay.io/helmpack/chart-testing:v3.7.1
+HELM_IMAGE = alpine/helm:3.15.3
+HELM_DOCS_IMAGE = jnorwood/helm-docs:v1.14.2
+CT_IMAGE = quay.io/helmpack/chart-testing:v3.11.0
 KNOWN_TARGETS=helm
 HELM?=helm-docker
 CT?=ct-docker
 CONTAINER ?= docker
+
+include $(shell find charts -name Makefile)
 
 ifeq ($(CONTAINER),docker)
     CONTAINER_USER_OPTION = --user $(shell id -u):$(shell id -g)
@@ -60,35 +61,19 @@ helm-repo-update:
 
 # Run linter for helm chart
 lint: helm-repo-update
-	CMD="lint charts/victoria-metrics-cluster -f hack/vmcluster-template-hack.yaml" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-single -f hack/vmsingle-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-agent -f hack/vmagent-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-alert -f hack/vmalert-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-gateway -f hack/vmgateway-cluster-ratelimiting-minimum.yaml" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-auth -f hack/vmauth-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-anomaly -f hack/vmanomaly-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="dependency build charts/victoria-metrics-k8s-stack" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-k8s-stack -f hack/vm-k8s-stack-template-hack.yaml" $(MAKE) $(HELM)
-	CMD="dependency build charts/victoria-metrics-distributed" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-distributed"  $(MAKE) $(HELM)
-	CMD="dependency build charts/victoria-logs-single" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-logs-single -f hack/vlsingle-lint-hack.yaml" $(MAKE) $(HELM)
+	$(foreach values,$(wildcard hack/helm/*/lint/*.yaml), \
+		$(eval chart := $(word 3, $(subst /, ,$(values)))) \
+		CMD="dependency build charts/$(chart)" $(MAKE) $(HELM) || exit 1; \
+		CMD="lint charts/$(chart) -f $(values)" $(MAKE) $(HELM) || exit 1; \
+	)
 
 # Run template for helm charts
 template: helm-repo-update
-	CMD="template charts/victoria-metrics-cluster -f hack/vmcluster-template-hack.yaml" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-single -f hack/vmsingle-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-agent -f hack/vmagent-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-alert -f hack/vmalert-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-gateway -f hack/vmgateway-cluster-ratelimiting-minimum.yaml" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-auth -f hack/vmauth-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-anomaly -f hack/vmanomaly-lint-hack.yaml" $(MAKE) $(HELM)
-	CMD="dependency build charts/victoria-metrics-k8s-stack" $(MAKE) $(HELM)
-	CMD="template charts/victoria-metrics-k8s-stack -f hack/vm-k8s-stack-template-hack.yaml" $(MAKE) $(HELM)
-	CMD="dependency build charts/victoria-metrics-distributed" $(MAKE) $(HELM)
-	CMD="lint charts/victoria-metrics-distributed"  $(MAKE) $(HELM)
-	CMD="dependency build charts/victoria-logs-single" $(MAKE) $(HELM)
-	CMD="template charts/victoria-logs-single -f hack/vlsingle-lint-hack.yaml" $(MAKE) $(HELM)
+	$(foreach values,$(wildcard hack/helm/*/lint/*.yaml), \
+		$(eval chart := $(word 3, $(subst /, ,$(values)))) \
+		CMD="dependency build charts/$(chart)" $(MAKE) $(HELM) || exit 1; \
+		CMD="template charts/$(chart) -f $(values)" $(MAKE) $(HELM) || exit 1; \
+	)
 
 lint-ct:
 	CMD="lint --config .github/ci/ct.yaml --all" $(MAKE) $(CT)
@@ -150,23 +135,3 @@ gen-docs:
 		-w /helm-charts \
 		$(HELM_DOCS_IMAGE) \
 		helm-docs
-
-# Synchronize alerting rules in charts/victoria-metrics-k8s-stack/templates/rules
-sync-rules:
-	$(CONTAINER) run --rm \
-		$(CONTAINER_USER_OPTION) \
-		--volume "$(shell pwd)/charts/victoria-metrics-k8s-stack:/k8s-stack$(CONTAINER_VOLUME_OPTION_SUFFIX)" \
-		-w /k8s-stack/hack/ \
-		$(PYTHON_IMAGE) sh -c "\
-			pip3 install --no-cache-dir --no-build-isolation -r requirements.txt --user && python3 sync_rules.py \
-		"
-
-# Synchronize grafana dashboards in charts/victoria-metrics-k8s-stack/templates/grafana/dashboards
-sync-dashboards:
-	$(CONTAINER) run --rm \
-		$(CONTAINER_USER_OPTION) \
-		--volume "$(shell pwd)/charts/victoria-metrics-k8s-stack:/k8s-stack$(CONTAINER_VOLUME_OPTION_SUFFIX)" \
-		-w /k8s-stack/hack/ \
-		$(PYTHON_IMAGE) sh -c "\
-			pip3 install --no-cache-dir --no-build-isolation -r requirements.txt --user && python3 sync_grafana_dashboards.py \
-		"
