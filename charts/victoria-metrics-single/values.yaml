@@ -138,6 +138,7 @@ server:
   ##
   # schedulerName:
 
+  emptyDir: {}
   persistentVolume:
     # -- Create/use Persistent Volume Claim for server component. Empty dir if false
     enabled: true
@@ -336,25 +337,16 @@ server:
     # -- Service type
     type: ClusterIP
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
-    # externalTrafficPolicy: "local"
-    # healthCheckNodePort: 0
+    externalTrafficPolicy: ""
+    healthCheckNodePort: ""
+    ipFamilyPolicy: ""
+    ipFamilies: []
 
   statefulSet:
     # -- Creates statefulset instead of deployment, useful when you want to keep the cache
     enabled: true
     # -- Deploy order policy for StatefulSet pods
     podManagementPolicy: OrderedReady
-    # Headless service for statefulset
-    service:
-      # -- Headless service annotations
-      annotations: {}
-      # -- Headless service labels
-      labels: {}
-      # -- Headless service port
-      servicePort: 8428
-      # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
-      # externalTrafficPolicy: "local"
-      # healthCheckNodePort: 0
   # -- Pod's termination grace period in seconds
   terminationGracePeriodSeconds: 60
   serviceMonitor:
@@ -380,12 +372,20 @@ server:
     # -- Service Monitor metricRelabelings
     metricRelabelings: []
 
+  # -- Global relabel configuration
+  relabel:
+    enabled: false
+    config: []
+    # -- Use existing configmap if specified
+    # otherwise .config values will be used. Relabel config **should** reside under `relabel.yml` key
+    configMap: ""
+
   # -- Scrape configuration for victoriametrics
   scrape:
     # -- If true scrapes targets, creates config map or use specified one with scrape targets
     enabled: false
     # -- Use existing configmap if specified
-    # otherwise .config values will be used
+    # otherwise .config values will be used. Scrape config **should** reside under `scrape.yml` key
     configMap: ""
     # -- Scrape config
     config:
@@ -697,6 +697,20 @@ server:
 
     # -- Extra scrape configs that will be appended to `server.scrape.config`
     extraScrapeConfigs: []
+    # - job_name: 'prometheus-blackbox-exporter'
+    #   metrics_path: /probe
+    #   params:
+    #     module: [http_2xx]
+    #   static_configs:
+    #     - targets:
+    #       - https://example.com
+    #   relabel_configs:
+    #     - source_labels: [__address__]
+    #       target_label: __param_target
+    #     - source_labels: [__param_target]
+    #       target_label: instance
+    #     - target_label: __address__
+    #       replacement: prometheus-blackbox-exporter:9115
 
 # -- Add extra specs dynamically to this chart
 extraObjects: []

@@ -48,10 +48,10 @@ spec:
       securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       {{- with (.Values.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: vmgateway
           {{- if .Values.securityContext.enabled }}
           securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
           {{- end }}
@@ -83,7 +83,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8431
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .Values.extraArgs.httpListenAddr "default" "8431") }}
           {{- with .Values.envFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -101,20 +101,24 @@ spec:
           {{- end }}
           {{- if $isVolumes }}
           volumeMounts:
-          {{- if .Values.rateLimiter.enable }}
+            {{- if .Values.rateLimiter.enable }}
             - name: config
               mountPath: /config
-          {{- end }}
-          {{- range .Values.extraHostPathMounts }}
+            {{- end }}
+            {{- range .Values.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- include "chart.license.mount" . | nindent 12 }}
-          {{- with .Values.extraVolumeMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- include "chart.license.mount" . | nindent 12 }}
+            {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- end }}
           {{- end }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -133,18 +137,18 @@ spec:
       {{- end }}
       {{- if $isVolumes }}
       volumes:
-      {{- if .Values.rateLimiter.enable }}
+        {{- if .Values.rateLimiter.enable }}
         - name: config
           configMap:
             name: {{ include "chart.fullname" .}}
-      {{- end }}
-      {{- range .Values.extraHostPathMounts }}
+        {{- end }}
+        {{- range .Values.extraHostPathMounts }}
         - name: {{ .name }}
           hostPath:
             path: {{ .hostPath }}
-      {{- end }}
-      {{- with .Values.extraVolumes }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- include "chart.license.volume" . | nindent 8 }}
+        {{- end }}
+        {{- include "chart.license.volume" . | nindent 8 }}
       {{- end }}

@@ -40,10 +40,10 @@ spec:
       {{- end }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "vmalert.name" . }}-{{ $app.name }}
+        - name: vmalert
           {{- if $app.securityContext.enabled }}
           securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
@@ -125,7 +125,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: 8880
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" $app.extraArgs.httpListenAddr "default" "8880") }}
           {{- with (fromYaml (include "vm.probe" (dict "app" $app "type" "readiness"))) }}
           readinessProbe: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -141,8 +141,12 @@ spec:
             {{- range $app.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
             {{- end }}
             {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
@@ -179,4 +183,4 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- include "vmalert.license.volume" . | nindent 8 }}
-{{- end -}}
+{{- end }}

@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Agent.
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.10.14](https://img.shields.io/badge/Version-0.10.14-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.11.0](https://img.shields.io/badge/Version-0.11.0-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-agent)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -358,7 +358,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 | service.clusterIP | string | `""` |  |
 | service.enabled | bool | `false` |  |
 | service.externalIPs | list | `[]` |  |
+| service.externalTrafficPolicy | string | `""` |  |
 | service.extraLabels | object | `{}` |  |
+| service.healthCheckNodePort | string | `""` |  |
+| service.ipFamilies | list | `[]` |  |
+| service.ipFamilyPolicy | string | `""` |  |
 | service.loadBalancerIP | string | `""` |  |
 | service.loadBalancerSourceRanges | list | `[]` |  |
 | service.servicePort | int | `8429` |  |

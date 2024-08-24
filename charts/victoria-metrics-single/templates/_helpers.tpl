@@ -103,37 +103,14 @@ Defines the name of scrape configuration map
 {{- end -}}
 
 {{/*
-Return the appropriate apiVersion for ingress.
+Defines the name of relabel configuration map
 */}}
-{{- define "victoria-metrics.ingress.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "networking.k8s.io/v1") -}}
-      {{- print "networking.k8s.io/v1" -}}
-  {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
-    {{- print "networking.k8s.io/v1beta1" -}}
-  {{- else -}}
-    {{- print "extensions/v1beta1" -}}
-  {{- end -}}
+{{- define "victoria-metrics.server.relabel.configname" -}}
+{{- if .Values.server.relabel.configMap -}}
+{{- .Values.server.relabel.configMap -}}
+{{- else -}}
+{{- include "victoria-metrics.server.fullname" . -}}-relabelconfig
 {{- end -}}
-
-{{/*
-Return if ingress is stable.
-*/}}
-{{- define "victoria-metrics.ingress.isStable" -}}
-  {{- eq (include "victoria-metrics.ingress.apiVersion" .) "networking.k8s.io/v1" -}}
-{{- end -}}
-
-{{/*
-Return if ingress supports ingressClassName.
-*/}}
-{{- define "victoria-metrics.ingress.supportsIngressClassName" -}}
-  {{- or (eq (include "victoria-metrics.ingress.isStable" .) "true") (and (eq (include "victoria-metrics.ingress.apiVersion" .) "networking.k8s.io/v1beta1")) -}}
-{{- end -}}
-
-{{/*
-Return if ingress supports pathType.
-*/}}
-{{- define "victoria-metrics.ingress.supportsPathType" -}}
-  {{- or (eq (include "victoria-metrics.ingress.isStable" .) "true") (and (eq (include "victoria-metrics.ingress.apiVersion" .) "networking.k8s.io/v1beta1")) -}}
 {{- end -}}
 
 {{- define "victoria-metrics.hasInitContainer" -}}
@@ -146,13 +123,13 @@ Return if ingress supports pathType.
 {{ toYaml . }}
 {{- end -}}
 {{- if .Values.server.vmbackupmanager.restore.onStart.enabled }}
-- name: {{ template "victoria-metrics.name" . }}-vmbackupmanager-restore
-  image: "{{ .Values.server.vmbackupmanager.image.repository }}:{{ .Values.server.vmbackupmanager.image.tag }}"
+- name: vmbackupmanager-restore
+  image: {{ include "vm.image" (merge (deepCopy .) (dict "app" .Values.server.vmbackupmanager)) }}
   imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
   args:
     - restore
-    - {{ printf "%s=%t" "--eula" .Values.server.vmbackupmanager.eula | quote}}
-    - {{ printf "%s=%s" "--storageDataPath" .Values.server.persistentVolume.mountPath | quote}}
+    - --eula={{ .Values.server.vmbackupmanager.eula }}
+    - --storageDataPath={{ .Values.server.persistentVolume.mountPath }}
     {{- range $key, $value := .Values.server.vmbackupmanager.extraArgs }}
     - --{{ $key }}={{ $value }}
     {{- end }}

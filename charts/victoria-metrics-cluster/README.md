@@ -1,6 +1,6 @@
 # Victoria Metrics Helm Chart for Cluster Version
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.11.23](https://img.shields.io/badge/Version-0.11.23-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.12.1](https://img.shields.io/badge/Version-0.12.1-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-cluster)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -179,7 +179,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vminsert.service.annotations | object | `{}` | Service annotations |
 | vminsert.service.clusterIP | string | `""` | Service ClusterIP |
 | vminsert.service.externalIPs | list | `[]` | Service External IPs. Ref: [https://kubernetes.io/docs/user-guide/services/#external-ips]( https://kubernetes.io/docs/user-guide/services/#external-ips) |
+| vminsert.service.externalTrafficPolicy | string | `""` |  |
 | vminsert.service.extraPorts | list | `[]` | Extra service ports |
+| vminsert.service.healthCheckNodePort | string | `""` |  |
+| vminsert.service.ipFamilies | list | `[]` |  |
+| vminsert.service.ipFamilyPolicy | string | `""` |  |
 | vminsert.service.labels | object | `{}` | Service labels |
 | vminsert.service.loadBalancerIP | string | `""` | Service load balancer IP |
 | vminsert.service.loadBalancerSourceRanges | list | `[]` | Load balancer source range |
@@ -267,7 +271,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmselect.service.annotations | object | `{}` | Service annotations |
 | vmselect.service.clusterIP | string | `""` | Service ClusterIP |
 | vmselect.service.externalIPs | list | `[]` | Service External IPs. Ref: [https://kubernetes.io/docs/user-guide/services/#external-ips](https://kubernetes.io/docs/user-guide/services/#external-ips) |
+| vmselect.service.externalTrafficPolicy | string | `""` |  |
 | vmselect.service.extraPorts | list | `[]` | Extra service ports |
+| vmselect.service.healthCheckNodePort | string | `""` |  |
+| vmselect.service.ipFamilies | list | `[]` |  |
+| vmselect.service.ipFamilyPolicy | string | `""` |  |
 | vmselect.service.labels | object | `{}` | Service labels |
 | vmselect.service.loadBalancerIP | string | `""` | Service load balacner IP |
 | vmselect.service.loadBalancerSourceRanges | list | `[]` | Load balancer source range |
@@ -283,9 +291,6 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmselect.serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |
 | vmselect.statefulSet.enabled | bool | `false` | Deploy StatefulSet instead of Deployment for vmselect. Useful if you want to keep cache data. |
 | vmselect.statefulSet.podManagementPolicy | string | `"OrderedReady"` | Deploy order policy for StatefulSet pods |
-| vmselect.statefulSet.service.annotations | object | `{}` | Headless service annotations |
-| vmselect.statefulSet.service.labels | object | `{}` | Headless service labels |
-| vmselect.statefulSet.service.servicePort | int | `8481` | Headless service port |
 | vmselect.strategy | object | `{}` |  |
 | vmselect.suppressStorageFQDNsRender | bool | `false` | Suppress rendering `--storageNode` FQDNs based on `vmstorage.replicaCount` value. If true suppress rendering `--storageNodes`, they can be re-defined in extraArgs |
 | vmselect.tolerations | list | `[]` | Array of tolerations object. Ref: [https://kubernetes.io/docs/concepts/configuration/assign-pod-node/](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) |
@@ -324,7 +329,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.persistentVolume.mountPath | string | `"/storage"` | Data root path. Vmstorage data Persistent Volume mount root path |
 | vmstorage.persistentVolume.name | string | `"vmstorage-volume"` |  |
 | vmstorage.persistentVolume.size | string | `"8Gi"` | Size of the volume. |
-| vmstorage.persistentVolume.storageClass | string | `""` | Storage class name. Will be empty if not setted |
+| vmstorage.persistentVolume.storageClassName | string | `""` | Storage class name. Will be empty if not setted |
 | vmstorage.persistentVolume.subPath | string | `""` | Mount subpath |
 | vmstorage.podAnnotations | object | `{}` | Pod's annotations |
 | vmstorage.podDisruptionBudget | object | `{"enabled":false,"labels":{}}` | See `kubectl explain poddisruptionbudget.spec` for more. Ref: [https://kubernetes.io/docs/tasks/run-application/configure-pdb/](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) |
@@ -350,7 +355,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 | vmstorage.retentionPeriod | int | `1` | Data retention period. Supported values 1w, 1d, number without measurement means month, e.g. 2 = 2month |
 | vmstorage.securityContext | object | `{"enabled":false}` | Pod's security context. Ref: [https://kubernetes.io/docs/tasks/configure-pod-container/security-context/](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/) |
 | vmstorage.service.annotations | object | `{}` | Service annotations |
+| vmstorage.service.externalTrafficPolicy | string | `""` |  |
 | vmstorage.service.extraPorts | list | `[]` | Extra service ports |
+| vmstorage.service.healthCheckNodePort | string | `""` |  |
+| vmstorage.service.ipFamilies | list | `[]` |  |
+| vmstorage.service.ipFamilyPolicy | string | `""` |  |
 | vmstorage.service.labels | object | `{}` | Service labels |
 | vmstorage.service.servicePort | int | `8482` | Service port |
 | vmstorage.service.vminsertPort | int | `8400` | Port for accepting connections from vminsert |

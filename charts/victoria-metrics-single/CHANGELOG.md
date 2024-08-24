@@ -2,11 +2,35 @@
 
 ## Next release
 
-- Added basicAuth support for ServiceMonitor
+- Fixed image pull secrets. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1285)
+- Added global relabelConfig. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/207)
+- Renamed `.Values.server.persistentVolume.storageClass` to `.Values.server.persistentVolume.storageClassName`
+- Removed necessity to set `.Values.server.persistentVolume.existingClaim` when it should be created by chart. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/189)
+
+## 0.10.1
+
+**Release date:** 2024-08-22
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Added ability to configure container port
+- Fixed volume template. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1280)
+
+## 0.10.0
+
+**Release date:** 2024-08-21
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+**Update note**: main container name was changed to `vmsingle`, which will recreate a pod.
+
+- Added `basicAuth` support for `ServiceMonitor`
 - fix inconsistent relabeling `target_label` in default scrape config.
-- Removed PodSecurityPolicy
-- Removed support for policy/v1beta1/PodDisruptionBudget
-- Set minimal kubernetes version to 1.25
+- Removed `PodSecurityPolicy`
+- Removed support for `policy/v1beta1/PodDisruptionBudget`
+- Set minimal kubernetes version to `1.25`
 - Added ability to override liveness and readiness probes
 - Updated `.Values.vmbackupmanager.readinessProbe` to `.Values.vmbackupmanager.probe.readiness`
 - Updated `.Values.vmbackupmanager.livenessProbe` to `.Values.vmbackupmanager.probe.liveness`
@@ -14,7 +38,11 @@
 - Updated `.Values.server.readinessProbe` to `.Values.server.probe.readiness`
 - Updated `.Values.server.livenessProbe` to `.Values.server.probe.liveness`
 - Updated `.Values.server.startupProbe` to `.Values.server.probe.startup`
-- Added global imagePullSecrets and image.registry
+- Added `.Values.global.imagePullSecrets` and `.Values.global.image.registry`
+- Merged headless and non-headless services, removed statefulset service specific variables
+- Use static container names in a pod
+- Removed `networking.k8s.io/v1beta1/Ingress` and `extensions/v1beta1/Ingress` support
+- Added `.Values.server.service.ipFamilies` and `.Values.server.service.ipFamilyPolicy` for service IP family management
 
 ## 0.9.26
 

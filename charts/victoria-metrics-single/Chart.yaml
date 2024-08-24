@@ -3,7 +3,7 @@ type: application
 appVersion: v1.102.1
 description: Victoria Metrics Single version - high-performance, cost-effective and scalable TSDB, long-term remote storage for Prometheus
 name: victoria-metrics-single
-version: 0.9.26
+version: 0.10.1
 sources:
   - https://github.com/VictoriaMetrics/helm-charts
 kubeVersion: ">=1.25.0-0"
@@ -31,4 +31,4 @@ annotations:
 dependencies:
   - name: victoria-metrics-common
     version: "0.0.*"
-    repository: file://../victoria-metrics-common
+    repository: https://victoriametrics.github.io/helm-charts

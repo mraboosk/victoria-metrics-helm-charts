@@ -1,10 +1,11 @@
 {{- $global := (dict "Values" (deepCopy .Values) "Release" (deepCopy .Release) "Chart" (deepCopy .Chart) "Template" (deepCopy .Template)) -}}
 {{- $app := .Values.server }}
+{{- $fullname := (include "victoria-logs.server.fullname" .) }}
 {{- if and $app.enabled $app.statefulSet.enabled -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ template "victoria-logs.server.fullname" . }}
+  name: {{ $fullname }}
   namespace: {{ .Release.Namespace }}
   {{- with $app.annotations }}
   annotations: {{ toYaml . | nindent 4 }}
@@ -12,7 +13,7 @@ metadata:
   {{- $ctx := merge (deepCopy $global) (dict "extraLabels" $app.extraLabels) }}
   labels: {{ include "victoria-logs.server.labels" $ctx | nindent 4 }}
 spec:
-  serviceName: {{ template "victoria-logs.server.fullname" . }}
+  serviceName: {{ $fullname }}
   selector:
     matchLabels: {{ include "victoria-logs.server.matchLabels" . | nindent 6 }}
   replicas: 1
@@ -35,15 +36,15 @@ spec:
       initContainers: {{ include "victoria-logs.initContiners" . | nindent 8 }}
       {{- end }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "victoria-logs.name" . }}-{{ .Values.global.victoriaLogs.server.name }}
+        - name: vlogs
           {{- if $app.securityContext.enabled }}
           securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
-          imagePullPolicy: "{{ $app.image.pullPolicy }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
           {{- with $app.containerWorkingDir }}
           workingDir: {{ . }}
           {{- end }}
@@ -61,7 +62,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: 9428
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" $app.extraArgs.httpListenAddr "default" "9428") }}
           {{- with (fromYaml (include "vm.probe" (dict "app" $app "type" "readiness"))) }}
           readinessProbe: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -75,30 +76,46 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- with $app.persistentVolume }}
             - name: server-volume
-              mountPath: {{ $app.persistentVolume.mountPath }}
-              subPath: {{ $app.persistentVolume.subPath }}
-          {{- range $app.extraHostPathMounts }}
+              mountPath: {{ .mountPath }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- range $app.extraConfigmapMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraConfigmapMounts }}
             - name: {{ $app.name }}-{{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- range $app.extraSecretMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraSecretMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- with $app.extraVolumeMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- end }}
       {{- with $app.extraContainers }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -119,16 +136,13 @@ spec:
       {{- end }}
       terminationGracePeriodSeconds: {{ $app.terminationGracePeriodSeconds }}
       volumes:
-        {{- if not $app.persistentVolume.enabled }}
         - name: server-volume
-          emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
-        {{- else }}
-        {{- with $app.persistentVolume.existingClaim }}
-        - name: server-volume
+          {{- if $app.persistentVolume.enabled }}
           persistentVolumeClaim:
-            claimName: {{ . }}
-        {{- end }}
-        {{- end }}
+            claimName: {{ $app.persistentVolume.existingClaim | default "server-volume" }}
+          {{- else }}
+          emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
+          {{- end }}
         {{- with $app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -147,8 +161,8 @@ spec:
         {{- end }}
         resources:
           requests:
-            storage: "{{ $app.persistentVolume.size }}"
-        {{- with $app.persistentVolume.storageClass }}
+            storage: {{ $app.persistentVolume.size }}
+        {{- with $app.persistentVolume.storageClassName }}
         storageClassName: {{ ternary "" . (eq "-" .) }}
         {{- end }}
         {{- with $app.persistentVolume.matchLabels }}

@@ -32,12 +32,12 @@ spec:
       initContainers: {{ toYaml . | nindent 8 }}
       {{- end }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "victoria-metrics.name" . }}-{{ $app.name }}
+        - name: vmselect
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
-          imagePullPolicy: "{{ $app.image.pullPolicy }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
           {{- with $app.containerWorkingDir }}
           workingDir: {{ . }}
           {{- end }}
@@ -70,7 +70,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: 8481
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" $app.extraArgs.httpListenAddr "default" "8481") }}
             {{- if $app.extraArgs.clusternativeListenAddr }}
             - name: cluster-tcp
               protocol: TCP
@@ -91,13 +91,17 @@ spec:
             {{- range .Values.vmstorage.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
             {{- end }}
             {{- with $app.extraVolumeMounts }}
-          {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- include "chart.license.mount" . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- include "chart.license.mount" . | nindent 12 }}
           {{- with $app.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -121,14 +125,17 @@ spec:
       topologySpreadConstraints: {{ toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      {{- with $app.extraVolumes }}
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      {{- if not $app.persistentVolume.enabled }}
-      - name: cache-volume
-        emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
-      {{- end }}
-      {{- include "chart.license.volume" . | nindent 8 }}
+        {{- with $app.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: cache-volume
+          {{- if $app.persistentVolume.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ $app.persistentVolume.existingClaim | default "cache-volume" }}
+          {{- else }}
+          emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
+          {{- end }}
+        {{- include "chart.license.volume" . | nindent 8 }}
   {{- if $app.persistentVolume.enabled }}
   volumeClaimTemplates:
     - apiVersion: v1
@@ -147,9 +154,9 @@ spec:
         {{- end }}
         resources:
           requests:
-            storage: "{{ $app.persistentVolume.size }}"
-        {{- with $app.persistentVolume.storageClass }}
-        storageClassName: {{ "" . (eq "-" .) }}
+            storage: {{ $app.persistentVolume.size }}
+        {{- with $app.persistentVolume.storageClassName }}
+        storageClassName: {{ ternary "" . (eq "-" .) }}
         {{- end }}
   {{- end }}
 {{- end }}

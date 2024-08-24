@@ -2,7 +2,26 @@
 
 ## Next release
 
+- TODO
+
+## 0.34.1
+
+**Release date:** 2024-08-23
+
+![AppVersion: v0.47.1](https://img.shields.io/static/v1?label=AppVersion&message=v0.47.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+**Update note**: main container name was changed to `operator`, which will recreate a pod.
+
+- Updated operator to v0.47.1 release
 - Added global imagePullSecrets and image.registry
+- Use static container names in a pod
+- Updated operator service scrape config
+- Added `.Values.vmstorage.service.ipFamilies` and `.Values.vmstorage.service.ipFamilyPolicy` for service IP family management
+- Enabled webhook by default
+- Generate webhook certificate when Cert Manager is not enabled
+- Added ability to configure container port
+- Fixed image pull secrets. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1285)
 
 ## 0.34.0
 

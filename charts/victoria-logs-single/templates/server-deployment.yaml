@@ -1,10 +1,11 @@
 {{- $global := (dict "Values" (deepCopy .Values) "Release" (deepCopy .Release) "Chart" (deepCopy .Chart) "Template" (deepCopy .Template)) -}}
 {{- $app := .Values.server }}
+{{- $fullname := (include "victoria-logs.server.fullname" .) }}
 {{- if and $app.enabled (not $app.statefulSet.enabled) -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "victoria-logs.server.fullname" . }}
+  name: {{ $fullname }}
   namespace: {{ .Release.Namespace }}
   {{- with $app.annotations }}
   annotations: {{ toYaml . | nindent 4 }}
@@ -38,15 +39,15 @@ spec:
       initContainers: {{ include "victoria-logs.initContiners" . | nindent 8 }}
       {{- end }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "victoria-logs.name" . }}-{{ .Values.global.victoriaLogs.server.name }}
+        - name: vlogs
           {{- if $app.securityContext.enabled }}
           securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
-          imagePullPolicy: "{{ $app.image.pullPolicy }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
           {{- if $app.containerWorkingDir }}
           workingDir: {{ $app.containerWorkingDir }}
           {{- end }}
@@ -64,7 +65,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: 9428
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" $app.extraArgs.httpListenAddr "default" "9428") }}
           {{- with (fromYaml (include "vm.probe" (dict "app" $app "type" "readiness"))) }}
           readinessProbe: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -78,35 +79,51 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- with $app.persistentVolume }}
             - name: server-volume
-              mountPath: {{ $app.persistentVolume.mountPath }}
-              subPath: {{ $app.persistentVolume.subPath }}
-          {{- range $app.extraHostPathMounts }}
+              mountPath: {{ .mountPath }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- range $app.extraConfigmapMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraConfigmapMounts }}
             - name: {{ $.Values.global.victoriaLogs.server }}-{{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- range $app.extraSecretMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraSecretMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- with $app.extraVolumeMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- end }}
         {{- with $app.extraContainers }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- with .Values.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.imagePullSecrets | nindent 8 }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       {{- with $app.nodeSelector }}
       nodeSelector: {{ toYaml . | nindent 8 }}
@@ -126,10 +143,10 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         - name: server-volume
-        {{- if $app.persistentVolume.enabled }}
+          {{- if $app.persistentVolume.enabled }}
           persistentVolumeClaim:
-            claimName: {{ if $app.persistentVolume.existingClaim }}{{ $app.persistentVolume.existingClaim }}{{- else }}{{ template "victoria-logs.server.fullname" . }}{{- end }}
-        {{- else }}
+            claimName: {{ $app.persistentVolume.existingClaim | default $fullname }}
+          {{- else }}
           emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
-        {{- end }}
+          {{- end }}
 {{- end }}

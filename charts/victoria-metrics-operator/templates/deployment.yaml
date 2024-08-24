@@ -27,10 +27,10 @@ spec:
       {{- end }}
       serviceAccountName: {{ template "vm-operator.serviceAccountName" . }}
       {{- with (.Values.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: operator
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" .Values)) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- with .Values.envFrom }}
@@ -87,14 +87,14 @@ spec:
             {{- end }}
             {{- end }}
           ports:
-            - containerPort: 8080
-              name: http
+            - name: http
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" (index .Values.extraArgs "metrics-bind-address") "default" "8080") }}
               protocol: TCP
-            - containerPort: 8081
-              name: probe
+            - name: probe
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" (index .Values.extraArgs "health-probe-bind-address") "default" "8081") }}
               protocol: TCP
-            - containerPort: 9443
-              name: webhook
+            - name: webhook
+              containerPort: 9443
               protocol: TCP
           {{- with (fromYaml (include "vm.probe" (dict "app" .Values "type" "readiness"))) }}
           readinessProbe: {{ toYaml . | nindent 12 }}
@@ -114,8 +114,7 @@ spec:
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
           {{- with .Values.securityContext }}
           securityContext: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -142,12 +141,12 @@ spec:
       tolerations: {{ toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-      {{- if .Values.admissionWebhooks.enabled }}
+        {{- if .Values.admissionWebhooks.enabled }}
         - name: cert
           secret:
             defaultMode: 420
             secretName: {{ template "vm-operator.fullname" . }}-validation
-      {{- end }}
-      {{- with .Values.extraVolumes }}
-      {{- toYaml .| nindent 10 }}
-      {{- end }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml .| nindent 8 }}
+        {{- end }}

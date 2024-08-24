@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Operator.
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.34.0](https://img.shields.io/badge/Version-0.34.0-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.34.1](https://img.shields.io/badge/Version-0.34.1-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-operator)
 
 Victoria Metrics Operator
@@ -9,6 +9,38 @@ Victoria Metrics Operator
 
 * Install the follow packages: ``git``, ``kubectl``, ``helm``, ``helm-docs``. See this [tutorial](../../REQUIREMENTS.md).
 * PV support on underlying infrastructure.
+
+## ArgoCD issues
+
+When running operator using ArgoCD without Cert Manager (`.Values.admissionWebhooks.certManager.enabled: false`) it will rerender webhook certificates
+on each sync since Helm `lookup` function is not respected by ArgoCD. To prevent this please update you operator Application `spec.syncPolicy` and `spec.ignoreDifferences` with a following:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+...
+spec:
+  ...
+  syncPolicy:
+    syncOptions:
+    # https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/#respect-ignore-difference-configs
+    # argocd must also ignore difference during apply stage
+    # otherwise it ll silently override changes and cause a problem
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: <fullname>-validation
+      namespace: kube-system
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: <fullname>-admission
+      jqPathExpressions:
+      - '.webhooks[]?.clientConfig.caBundle'
+```
+where `<fullname>` is output of `{{ include "vm-operator.fullname" }}` for your setup
 
 ## Upgrade guide
 
@@ -139,11 +171,11 @@ Change the values according to the need of the environment in ``victoria-metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| admissionWebhooks | object | `{"caBundle":"","certManager":{"enabled":false,"issuer":{}},"enabled":false,"enabledCRDValidation":{"vmagent":true,"vmalert":true,"vmalertmanager":true,"vmalertmanagerConfig":true,"vmauth":true,"vmcluster":true,"vmrule":true,"vmsingle":true,"vmuser":true},"policy":"Fail"}` | Configures resource validation |
-| admissionWebhooks.caBundle | string | `""` | with keys: tls.key, tls.crt, ca.crt |
+| admissionWebhooks | object | `{"certManager":{"enabled":false,"issuer":{}},"enabled":true,"enabledCRDValidation":{"vlogs":true,"vmagent":true,"vmalert":true,"vmalertmanager":true,"vmalertmanagerconfig":true,"vmauth":true,"vmcluster":true,"vmrule":true,"vmsingle":true,"vmuser":true},"keepTLSSecret":false,"policy":"Fail","tls":{"caCert":null,"cert":null,"key":null}}` | Configures resource validation |
+| admissionWebhooks.certManager | object | `{"enabled":false,"issuer":{}}` | with keys: tls.key, tls.crt, ca.crt |
 | admissionWebhooks.certManager.enabled | bool | `false` | Enables cert creation and injection by cert-manager. |
 | admissionWebhooks.certManager.issuer | object | `{}` | If needed, provide own issuer. Operator will create self-signed if empty. |
-| admissionWebhooks.enabled | bool | `false` | Enables validation webhook. |
+| admissionWebhooks.enabled | bool | `true` | Enables validation webhook. |
 | admissionWebhooks.policy | string | `"Fail"` | What to do in case, when operator not available to validate request. |
 | affinity | object | `{}` | Pod affinity |
 | annotations | object | `{}` | Annotations to be added to the all resources |
@@ -161,6 +193,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | extraVolumeMounts | list | `[]` | Extra Volume Mounts for the container |
 | extraVolumes | list | `[]` | Extra Volumes for the pod |
 | fullnameOverride | string | `""` | Overrides the full name of server component |
+| global.cluster.dnsDomain | string | `"cluster.local"` |  |
 | global.image.registry | string | `""` |  |
 | global.imagePullSecrets | list | `[]` |  |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
@@ -199,9 +232,20 @@ Change the values according to the need of the environment in ``victoria-metrics
 | replicaCount | int | `1` |  |
 | resources | object | `{}` | Resource object |
 | securityContext | object | `{}` |  |
+| service.annotations | object | `{}` |  |
+| service.clusterIP | string | `""` |  |
+| service.externalIPs | string | `""` |  |
+| service.externalTrafficPolicy | string | `""` |  |
+| service.healthCheckNodePort | string | `""` |  |
+| service.ipFamilies | list | `[]` |  |
+| service.ipFamilyPolicy | string | `""` |  |
+| service.labels | object | `{}` |  |
+| service.loadBalancerIP | string | `""` |  |
+| service.loadBalancerSourceRanges | list | `[]` |  |
+| service.type | string | `"ClusterIP"` |  |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| serviceMonitor | object | `{"annotations":{},"enabled":false,"extraLabels":{},"relabelings":[]}` | configures monitoring with serviceScrape. VMServiceScrape must be pre-installed |
+| serviceMonitor | object | `{"annotations":{},"basicAuth":{},"enabled":false,"extraLabels":{},"interval":"","relabelings":[],"scheme":"","scrapeTimeout":"","tlsConfig":{}}` | configures monitoring with serviceScrape. VMServiceScrape must be pre-installed |
 | tolerations | list | `[]` | Array of tolerations object. Ref: [https://kubernetes.io/docs/concepts/configuration/assign-pod-node/](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) |
 | topologySpreadConstraints | list | `[]` | Pod Topology Spread Constraints. Ref: [https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/) |
 | watchNamespace | string | `""` |  |

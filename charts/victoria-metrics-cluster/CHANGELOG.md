@@ -2,17 +2,55 @@
 
 ## Next release
 
-- Added basicAuth support for ServiceMonitor
-- Removed PodSecurityPolicy
-- Set minimal kubernetes version to 1.25
-- Removed support for policy/v1beta1/PodDisruptionBudget
+- Fixed image pull secrets. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1285)
+- Renamed `.Values.vmstorage.persistentVolume.storageClass` to `.Values.vmstorage.persistentVolume.storageClassName`
+- Removed necessity to set `.Values.vmstorage.persistentVolume.existintClaim` when it should be created by chart. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/189)
+
+## 0.12.1
+
+**Release date:** 2024-08-22
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Added ability to configure container port
+- Fixed volume template. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1280)
+
+## 0.12.0
+
+**Release date:** 2024-08-21
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+**Update note**: `vmselect` main container name was changed to `vmselect`, which will recreate a pod.
+
+**Update note**: `vmstorage` main container name was changed to `vmstorage`, which will recreate a pod.
+
+**Update note**: `vminsert` main container name was changed to `vminsert`, which will recreate a pod.
+
+**Update note**: requires Helm 3.14+
+
+- Added `basicAuth` support for `ServiceMonitor`
+- Removed `PodSecurityPolicy`
+- Set minimal kubernetes version to `1.25`
+- Removed support for `policy/v1beta1/PodDisruptionBudget`
 - Added ability to override liveness and readiness probes
 - Updated `.Values.vmbackupmanager.readinessProbe` to `.Values.vmbackupmanager.probe.readiness`
 - Updated `.Values.vmbackupmanager.livenessProbe` to `.Values.vmbackupmanager.probe.liveness`
 - Updated `.Values.vmbackupmanager.startupProbe` to `.Values.vmbackupmanager.probe.startup`
-- Added global imagePullSecrets and image.registry
+- Added `.Values.global.imagePullSecrets` and `.Values.global.image.registry`
 - Fix templating of Ingress port when using custom port name.
 - Added `.Values.vmselect.emptyDir` and `.Values.vmstorage.emptyDir` to customize default cache directory
+- Merged headless and non-headless services, removed statefulset service specific variables
+- Added `.Values.vmselect.service.healthCheckNodePort` and `.Values.vmselect.service.externalTrafficPolicy`
+- Added `.Values.vmstorage.service.healthCheckNodePort` and `.Values.vmstorage.service.externalTrafficPolicy`
+- Added `.Values.vminsert.service.healthCheckNodePort` and `.Values.vminsert.service.externalTrafficPolicy`
+- Use static container names in a pod
+- Removed `networking.k8s.io/v1beta1/Ingress` and `extensions/v1beta1/Ingress` support
+- Added `.Values.vmstorage.service.ipFamilies` and `.Values.vmstorage.service.ipFamilyPolicy` for service IP family management
+- Added `.Values.vmselect.service.ipFamilies` and `.Values.vmselect.service.ipFamilyPolicy` for service IP family management
+- Added `.Values.vminsert.service.ipFamilies` and `.Values.vminsert.service.ipFamilyPolicy` for service IP family management
 
 ## 0.11.23
 

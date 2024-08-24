@@ -1,6 +1,6 @@
 # Victoria Logs Helm Chart for Single Version
 
- ![Version: 0.5.4](https://img.shields.io/badge/Version-0.5.4-informational?style=flat-square)
+ ![Version: 0.6.0](https://img.shields.io/badge/Version-0.6.0-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-logs-single)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -171,7 +171,7 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.persistentVolume.matchLabels | object | `{}` | Bind Persistent Volume by labels. Must match all labels of targeted PV. |
 | server.persistentVolume.mountPath | string | `"/storage"` | Mount path. Server data Persistent Volume mount root path. |
 | server.persistentVolume.size | string | `"3Gi"` | Size of the volume. Should be calculated based on the logs you send and retention policy you set. |
-| server.persistentVolume.storageClass | string | `""` | StorageClass to use for persistent volume. Requires server.persistentVolume.enabled: true. If defined, PVC created automatically |
+| server.persistentVolume.storageClassName | string | `""` | StorageClass to use for persistent volume. Requires server.persistentVolume.enabled: true. If defined, PVC created automatically |
 | server.persistentVolume.subPath | string | `""` | Mount subpath |
 | server.podAnnotations | object | `{}` | Pod's annotations |
 | server.podLabels | object | `{}` | Pod's additional labels |
@@ -197,6 +197,10 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.service.annotations | object | `{}` | Service annotations |
 | server.service.clusterIP | string | `""` | Service ClusterIP |
 | server.service.externalIPs | list | `[]` | Service External IPs. Ref: [https://kubernetes.io/docs/user-guide/services/#external-ips]( https://kubernetes.io/docs/user-guide/services/#external-ips) |
+| server.service.externalTrafficPolicy | string | `""` |  |
+| server.service.healthCheckNodePort | string | `""` |  |
+| server.service.ipFamilies | list | `[]` |  |
+| server.service.ipFamilyPolicy | string | `""` |  |
 | server.service.labels | object | `{}` | Service labels |
 | server.service.loadBalancerIP | string | `""` | Service load balacner IP |
 | server.service.loadBalancerSourceRanges | list | `[]` | Load balancer source range |
@@ -210,8 +214,5 @@ Change the values according to the need of the environment in ``victoria-logs-si
 | server.serviceMonitor.relabelings | list | `[]` | Service Monitor relabelings |
 | server.statefulSet.enabled | bool | `true` | Creates statefulset instead of deployment, useful when you want to keep the cache |
 | server.statefulSet.podManagementPolicy | string | `"OrderedReady"` | Deploy order policy for StatefulSet pods |
-| server.statefulSet.service.annotations | object | `{}` | Headless service annotations |
-| server.statefulSet.service.labels | object | `{}` | Headless service labels |
-| server.statefulSet.service.servicePort | int | `9428` | Headless service port |
 | server.terminationGracePeriodSeconds | int | `60` | Pod's termination grace period in seconds |
 | server.tolerations | list | `[]` | Node tolerations for server scheduling to nodes with taints. Ref: [https://kubernetes.io/docs/concepts/configuration/assign-pod-node/](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) |

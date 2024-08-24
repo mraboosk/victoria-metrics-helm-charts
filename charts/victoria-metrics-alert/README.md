@@ -1,6 +1,6 @@
 # Helm Chart For Victoria Metrics Alert.
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.9.12](https://img.shields.io/badge/Version-0.9.12-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)  ![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-alert)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -139,7 +139,7 @@ Change the values according to the need of the environment in ``victoria-metrics
 | alertmanager.persistentVolume.existingClaim | string | `""` | Existing Claim name. If defined, PVC must be created manually before volume will be bound |
 | alertmanager.persistentVolume.mountPath | string | `"/data"` | Mount path. Alertmanager data Persistent Volume mount root path. |
 | alertmanager.persistentVolume.size | string | `"50Mi"` | Size of the volume. Better to set the same as resource limit memory property. |
-| alertmanager.persistentVolume.storageClass | string | `""` | StorageClass to use for persistent volume. Requires alertmanager.persistentVolume.enabled: true. If defined, PVC created automatically |
+| alertmanager.persistentVolume.storageClassName | string | `""` | StorageClass to use for persistent volume. Requires alertmanager.persistentVolume.enabled: true. If defined, PVC created automatically |
 | alertmanager.persistentVolume.subPath | string | `""` | Mount subpath |
 | alertmanager.podMetadata.annotations | object | `{}` |  |
 | alertmanager.podMetadata.labels | object | `{}` |  |
@@ -155,7 +155,18 @@ Change the values according to the need of the environment in ``victoria-metrics
 | alertmanager.retention | string | `"120h"` |  |
 | alertmanager.securityContext.enabled | bool | `false` |  |
 | alertmanager.service.annotations | object | `{}` |  |
+| alertmanager.service.clusterIP | string | `""` |  |
+| alertmanager.service.externalIPs | list | `[]` | Ref: https://kubernetes.io/docs/user-guide/services/#external-ips |
+| alertmanager.service.externalTrafficPolicy | string | `""` | Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip |
+| alertmanager.service.healthCheckNodePort | string | `""` |  |
+| alertmanager.service.ipFamilies | list | `[]` |  |
+| alertmanager.service.ipFamilyPolicy | string | `""` |  |
+| alertmanager.service.labels | object | `{}` |  |
+| alertmanager.service.loadBalancerIP | string | `""` |  |
+| alertmanager.service.loadBalancerSourceRanges | list | `[]` |  |
+| alertmanager.service.nodePort | string | `""` | if you want to force a specific nodePort. Must be use with service.type=NodePort |
 | alertmanager.service.port | int | `9093` |  |
+| alertmanager.service.servicePort | int | `8880` |  |
 | alertmanager.service.type | string | `"ClusterIP"` |  |
 | alertmanager.templates | object | `{}` |  |
 | alertmanager.tolerations | list | `[]` |  |
@@ -247,6 +258,10 @@ Change the values according to the need of the environment in ``victoria-metrics
 | server.service.annotations | object | `{}` |  |
 | server.service.clusterIP | string | `""` |  |
 | server.service.externalIPs | list | `[]` |  |
+| server.service.externalTrafficPolicy | string | `""` |  |
+| server.service.healthCheckNodePort | string | `""` |  |
+| server.service.ipFamilies | list | `[]` |  |
+| server.service.ipFamilyPolicy | string | `""` |  |
 | server.service.labels | object | `{}` |  |
 | server.service.loadBalancerIP | string | `""` |  |
 | server.service.loadBalancerSourceRanges | list | `[]` |  |

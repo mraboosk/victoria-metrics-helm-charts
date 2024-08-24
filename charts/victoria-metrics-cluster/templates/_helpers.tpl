@@ -191,7 +191,11 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- $dnsSuffix := .Values.clusterDomainSuffix -}}
 {{- $args := default list -}}
 {{- range $i := until (.Values.vmselect.replicaCount | int) -}}
-{{- $value := printf "%s-%d.%s.%s.svc.%s:8481" $pod $i $svc $namespace $dnsSuffix -}}
+{{- $port := "8481" }}
+{{- with .Values.vmselect.extraArgs.httpListenAddr }}
+{{- $port = regexReplaceAll ".*:(\\d+)" . "${1}" }}
+{{- end }}
+{{- $value := printf "%s-%d.%s.%s.svc.%s:%s" $pod $i $svc $namespace $dnsSuffix $port -}}
 {{- $args = append $args (printf "--selectNode=%q" $value) -}}
 {{- end -}}
 {{- toYaml $args -}}
@@ -201,41 +205,6 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- $hp := split ":" . -}}
 {{- printf "%s" $hp._1 -}}
 {{- end -}}
-
-{{/*
-Return the appropriate apiVersion for ingress.
-*/}}
-{{- define "victoria-metrics.ingress.apiVersion" -}}
-  {{- if and (.Capabilities.APIVersions.Has "networking.k8s.io/v1") -}}
-      {{- print "networking.k8s.io/v1" -}}
-  {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
-    {{- print "networking.k8s.io/v1beta1" -}}
-  {{- else -}}
-    {{- print "extensions/v1beta1" -}}
-  {{- end -}}
-{{- end -}}
-
-{{/*
-Return if ingress is stable.
-*/}}
-{{- define "victoria-metrics.ingress.isStable" -}}
-  {{- eq (include "victoria-metrics.ingress.apiVersion" .) "networking.k8s.io/v1" -}}
-{{- end -}}
-
-{{/*
-Return if ingress supports ingressClassName.
-*/}}
-{{- define "victoria-metrics.ingress.supportsIngressClassName" -}}
-  {{- or (eq (include "victoria-metrics.ingress.isStable" .) "true") (and (eq (include "victoria-metrics.ingress.apiVersion" .) "networking.k8s.io/v1beta1")) -}}
-{{- end -}}
-
-{{/*
-Return if ingress supports pathType.
-*/}}
-{{- define "victoria-metrics.ingress.supportsPathType" -}}
-  {{- or (eq (include "victoria-metrics.ingress.isStable" .) "true") (and (eq (include "victoria-metrics.ingress.apiVersion" .) "networking.k8s.io/v1beta1")) -}}
-{{- end -}}
-
 
 {{- define "victoria-metrics.storage.hasInitContainer" -}}
     {{- or (gt (len .Values.vmstorage.initContainers) 0)  .Values.vmstorage.vmbackupmanager.restore.onStart.enabled -}}
@@ -247,9 +216,9 @@ Return if ingress supports pathType.
 {{ toYaml . }}
 {{- end -}}
 {{- if .Values.vmstorage.vmbackupmanager.restore.onStart.enabled }}
-- name: {{ template "victoria-metrics.name" . }}-vmbackupmanager-restore
-  image: "{{ .Values.vmstorage.vmbackupmanager.image.repository }}:{{ default .Chart.AppVersion .Values.vmstorage.vmbackupmanager.image.tag }}{{- with .Values.vmstorage.vmbackupmanager.image.variant }}-{{ . }}{{- end }}"
-  imagePullPolicy: "{{ .Values.vmstorage.image.pullPolicy }}"
+- name: vmbackupmanager-restore
+  image: {{ include "vm.image" (merge (deepCopy .) (dict "app" .Values.server.vmbackupmanager)) }}
+  imagePullPolicy: {{ .Values.vmstorage.image.pullPolicy }}
   {{- with .Values.vmstorage.podSecurityContext }}
   securityContext:  {{ toYaml . | nindent 4 }}
   {{- end }}

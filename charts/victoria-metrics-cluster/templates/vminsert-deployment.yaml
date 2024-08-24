@@ -28,19 +28,19 @@ spec:
       labels: {{ include "victoria-metrics.vminsert.podLabels" $ctx | nindent 8 }}
     spec:
       {{- with $app.priorityClassName }}
-      priorityClassName: "{{ . }}"
+      priorityClassName: {{ . }}
       {{- end }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
       {{- with $app.initContainers }}
       initContainers: {{ toYaml . | nindent 8 }}
       {{- end }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "victoria-metrics.name" . }}-{{ $app.name }}
+        - name: vminsert
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
-          imagePullPolicy: "{{ $app.image.pullPolicy }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
           {{- with $app.containerWorkingDir }}
           workingDir: {{ . }}
           {{- end }}
@@ -70,8 +70,8 @@ spec:
           env: {{ toYaml . | nindent 12 }}
           {{- end }}
           ports:
-            - name: "{{ $app.ports.name  | default "http" }}"
-              containerPort: 8480
+            - name: {{ $app.ports.name  | default "http" }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" $app.extraArgs.httpListenAddr "default" "8480") }}
             {{- with $app.extraArgs.clusternativeListenAddr }}
             - name: cluster-tcp
               protocol: TCP
@@ -117,11 +117,11 @@ spec:
           {{- end }}
           {{- if or $app.extraVolumeMounts (include "chart.license.mount" .) }}
           volumeMounts:
-          {{- with $app.extraVolumeMounts }}
+            {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- include "chart.license.mount" . | nindent 12 }}
-          {{- end }}
+            {{- end }}
+            {{- include "chart.license.mount" . | nindent 12 }}
+            {{- end }}
           {{- with $app.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}

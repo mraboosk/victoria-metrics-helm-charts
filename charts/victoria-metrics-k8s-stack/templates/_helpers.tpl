@@ -78,14 +78,20 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "vm.release" -}}
+{{ default .Release.Name .Values.argocdReleaseOverride | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
 {{/*
 Selector labels
 */}}
 {{- define "victoria-metrics-k8s-stack.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "victoria-metrics-k8s-stack.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/instance: {{ include "vm.release" . }}
+{{- with .extraLabels }}
+{{ toYaml . }}
 {{- end }}
-
+{{- end }}
 
 {{- define "victoria-metrics-k8s-stack.vmReadEndpoint" -}}
 {{- if .Values.vmsingle.enabled -}}
@@ -111,24 +117,26 @@ url: {{ printf "http://%s.%s.svc:%s%s/insert/%s/prometheus/api/v1/write" (includ
 VMAlert remotes 
 */}}
 {{- define "victoria-metrics-k8s-stack.vmAlertRemotes" -}}
+{{- $fullname := (include "victoria-metrics-k8s-stack.fullname" .) -}}
+{{- $pathPrefix := (index .Values "vmsingle" "spec" "extraArgs" "http.pathPrefix" | default "") -}}
 remoteWrite:
 {{- if or .Values.vmalert.remoteWriteVMAgent }}
-     url: {{ printf "http://vmagent-%s.%s.svc:%s%s/api/v1/write" (.Values.vmagent.name | default (include "victoria-metrics-k8s-stack.fullname" .)) .Release.Namespace (.Values.vmagent.spec.port | default "8429") (index .Values "vmsingle" "spec" "extraArgs" "http.pathPrefix" | default "") }}
+  url: {{ printf "http://vmagent-%s.%s.svc:%s%s/api/v1/write" (.Values.vmagent.name | default $fullname) .Release.Namespace (.Values.vmagent.spec.port | default "8429") $pathPrefix }}
 {{- else }}
-     {{- include "victoria-metrics-k8s-stack.vmWriteEndpoint" . | nindent 2 }}
+  {{- include "victoria-metrics-k8s-stack.vmWriteEndpoint" . | nindent 2 }}
 {{- end }}
 remoteRead: {{ include "victoria-metrics-k8s-stack.vmReadEndpoint" . | nindent 2 }}
 datasource: {{ include "victoria-metrics-k8s-stack.vmReadEndpoint" . | nindent 2 }}
 {{- if .Values.vmalert.additionalNotifierConfigs }}
 notifierConfigRef:
-    name: {{ printf "%s-%s" (include "victoria-metrics-k8s-stack.fullname" $) "vmalert-additional-notifier" | trimSuffix "-" }}
-    key: notifier-configs.yaml
+  name: {{ (printf "%s-vmalert-additional-notifier" $fullname) | trimSuffix "-" }}
+  key: notifier-configs.yaml
 {{- else if .Values.alertmanager.enabled }}
 {{- $alertManagerReplicas := .Values.alertmanager.spec.replicaCount | default 1 }}
 notifiers:
-    {{- range $n := until (int $alertManagerReplicas) }}
-    - url: {{ printf "http://%s-%s-%d.%s-%s.%s.svc:9093" "vmalertmanager" (include "victoria-metrics-k8s-stack.fullname" $) $n "vmalertmanager" (include "victoria-metrics-k8s-stack.fullname" $) $.Release.Namespace }}
-    {{- end }}
+  {{- range $n := until (int $alertManagerReplicas) }}
+  - url: {{ printf "http://vmalertmanager-%s-%d.vmalertmanager-%s.%s.svc:9093%s" $fullname $n $fullname $.Release.Namespace ($.Values.alertmanager.spec.routePrefix | default "") }}
+  {{- end }}
 {{- end }}
 {{- end }}
 
@@ -152,12 +160,20 @@ configMaps:
 VMAlert spec
 */}}
 {{- define "victoria-metrics-k8s-stack.vmAlertSpec" -}}
-{{- $extraArgs := default dict -}}
+{{- $extraArgs := dict "remoteWrite.disablePathAppend" "true" -}}
 {{- if .Values.vmalert.templateFiles -}}
-{{- $_ := set $extraArgs "rule.templates" (print "/etc/vm/configs/" (printf "%s-%s" (include "victoria-metrics-k8s-stack.fullname" $) "vmalert-extra-tpl" | trunc 63 | trimSuffix "-" ) "/*.tmpl") -}}
+  {{- $ruleTmpl := (printf "/etc/vm/configs/%s-vmalert-extra-tpl/*.tmpl" (include "victoria-metrics-k8s-stack.fullname" .) | trunc 63 | trimSuffix "-") -}}
+  {{- $_ := set $extraArgs "rule.templates" $ruleTmpl -}}
 {{- end -}}
-{{- $_ := set $extraArgs "remoteWrite.disablePathAppend" "true" -}}
-{{ tpl (deepCopy .Values.vmalert.spec | mergeOverwrite (include "victoria-metrics-k8s-stack.vmAlertRemotes" . | fromYaml) | mergeOverwrite (include "victoria-metrics-k8s-stack.vmAlertTemplates" . | fromYaml) | mergeOverwrite (dict "extraArgs" $extraArgs) | toYaml) . }}
+{{- $vmAlertRemotes := (include "victoria-metrics-k8s-stack.vmAlertRemotes" . | fromYaml) -}}
+{{- $vmAlertTemplates := (include "victoria-metrics-k8s-stack.vmAlertTemplates" . | fromYaml) -}}
+{{- $spec := dict "extraArgs" $extraArgs -}}
+{{- if or .Values.global.license.key .Values.global.license.keyRef.name -}}
+  {{- with .Values.global.license -}}
+    {{- $_ := set $spec "license" . -}}
+  {{- end -}}
+{{- end -}}
+{{- tpl (deepCopy .Values.vmalert.spec | mergeOverwrite $vmAlertRemotes | mergeOverwrite $vmAlertTemplates | mergeOverwrite $spec | toYaml) . -}}
 {{- end }}
 
 
@@ -178,7 +194,13 @@ remoteWrite:
 VMAgent spec
 */}}
 {{- define "victoria-metrics-k8s-stack.vmAgentSpec" -}}
-{{ tpl (deepCopy .Values.vmagent.spec | mergeOverwrite ( include "victoria-metrics-k8s-stack.vmAgentRemoteWrite" . | fromYaml) | toYaml) . }}
+{{- $spec := (include "victoria-metrics-k8s-stack.vmAgentRemoteWrite" . | fromYaml) -}}
+{{- if or .Values.global.license.key .Values.global.license.keyRef.name -}}
+  {{- with .Values.global.license -}}
+    {{- $_ := set $spec "license" . -}}
+  {{- end -}}
+{{- end -}}
+{{ tpl (deepCopy .Values.vmagent.spec | mergeOverwrite $spec | toYaml) . }}
 {{- end }}
 
 
@@ -225,11 +247,17 @@ templates:
 Single spec
 */}}
 {{ define "victoria-metrics-k8s-stack.VMSingleSpec" }}
-{{- $extraArgsProxy := default dict -}}
+{{- $extraArgs := default dict -}}
 {{- if .Values.vmalert.enabled }}
-{{- $_ := set $extraArgsProxy "vmalert.proxyURL" (include "vmalertProxyURL" . ) -}}
+  {{- $_ := set $extraArgs "vmalert.proxyURL" (include "vmalertProxyURL" . ) -}}
 {{- end }}
-{{ tpl (deepCopy .Values.vmsingle.spec | mergeOverwrite (dict "extraArgs" $extraArgsProxy) | toYaml) . }}
+{{- $spec := dict "extraArgs" $extraArgs -}}
+{{- if or .Values.global.license.key .Values.global.license.keyRef.name -}}
+  {{- with .Values.global.license -}}
+    {{- $_ := set $spec "license" . -}}
+  {{- end -}}
+{{- end -}}
+{{ tpl (deepCopy .Values.vmsingle.spec | mergeOverwrite $spec | toYaml) . }}
 {{- end }}
 
 
@@ -244,7 +272,13 @@ vmselect:
 
 
 {{ define "victoria-metrics-k8s-stack.VMClusterSpec"}}
-{{ tpl (deepCopy .Values.vmcluster.spec | mergeOverwrite ( include "vmselectSpec" . | fromYaml) | toYaml) . }}
+{{- $spec := (include "vmselectSpec" . | fromYaml) -}}
+{{- if or .Values.global.license.key .Values.global.license.keyRef.name -}}
+  {{- with .Values.global.license -}}
+    {{- $_ := set $spec "license" . -}}
+  {{- end -}}
+{{- end -}}
+{{ tpl (deepCopy .Values.vmcluster.spec | mergeOverwrite $spec | toYaml) . }}
 {{- end }}
 
 {{/*

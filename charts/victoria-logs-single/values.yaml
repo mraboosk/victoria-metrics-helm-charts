@@ -125,7 +125,7 @@ server:
     annotations: {}
 
     # -- StorageClass to use for persistent volume. Requires server.persistentVolume.enabled: true. If defined, PVC created automatically
-    storageClass: ""
+    storageClassName: ""
 
     # -- Existing Claim name. If defined, PVC must be created manually before volume will be bound
     existingClaim: ""
@@ -253,25 +253,16 @@ server:
     # -- Service type
     type: ClusterIP
     # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
-    # externalTrafficPolicy: "local"
-    # healthCheckNodePort: 0
+    externalTrafficPolicy: ""
+    healthCheckNodePort: ""
+    ipFamilyPolicy: ""
+    ipFamilies: []
 
   statefulSet:
     # -- Creates statefulset instead of deployment, useful when you want to keep the cache
     enabled: true
     # -- Deploy order policy for StatefulSet pods
     podManagementPolicy: OrderedReady
-    # Headless service for statefulset
-    service:
-      # -- Headless service annotations
-      annotations: {}
-      # -- Headless service labels
-      labels: {}
-      # -- Headless service port
-      servicePort: 9428
-      # Ref: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
-      # externalTrafficPolicy: "local"
-      # healthCheckNodePort: 0
   # -- Pod's termination grace period in seconds
   terminationGracePeriodSeconds: 60
   serviceMonitor:

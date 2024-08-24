@@ -24,10 +24,10 @@ spec:
       securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       {{- with (.Values.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: vmauth
           {{- if .Values.securityContext.enabled }}
           securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
           {{- end }}
@@ -50,7 +50,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8427
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .Values.extraArgs.httpListenAddr "default" "8427") }}
           {{- with .Values.envFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -69,16 +69,20 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-          {{- range .Values.extraHostPathMounts }}
+            {{- range .Values.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- with .Values.extraVolumeMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- include "vmauth.license.mount" . | nindent 12 }}
+            {{- end }}
+            {{- include "vmauth.license.mount" . | nindent 12 }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -97,17 +101,13 @@ spec:
       volumes:
         - name: config
           secret:
-          {{- if .Values.secretName }}
-            secretName: {{ .Values.secretName }}
-          {{- else }}
-            secretName: {{ include "chart.fullname" .}}
-          {{- end }}
-      {{- range .Values.extraHostPathMounts }}
+            secretName: {{ ternary (include "chart.fullname" .) .Values.secretName (empty .Values.secretName) }}
+        {{- range .Values.extraHostPathMounts }}
         - name: {{ .name }}
           hostPath:
             path: {{ .hostPath }}
-      {{- end }}
-      {{- with .Values.extraVolumes }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- include "vmauth.license.volume" . | nindent 8 }}
+        {{- end }}
+        {{- include "vmauth.license.volume" . | nindent 8 }}

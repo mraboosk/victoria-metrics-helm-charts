@@ -2,7 +2,7 @@ apiVersion: v2
 type: application
 description: Victoria Metrics Gateway - Auth & Rate-Limitting proxy for Victoria Metrics
 name: victoria-metrics-gateway
-version: 0.1.64
+version: 0.2.0
 appVersion: v1.102.1
 sources:
   - https://github.com/VictoriaMetrics/helm-charts
@@ -35,4 +35,4 @@ annotations:
 dependencies:
   - name: victoria-metrics-common
     version: "0.0.*"
-    repository: file://../victoria-metrics-common
+    repository: https://victoriametrics.github.io/helm-charts

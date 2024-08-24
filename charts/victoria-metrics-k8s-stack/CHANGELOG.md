@@ -4,6 +4,39 @@
 
 - TODO
 
+## 0.25.3
+
+**Release date:** 2024-08-23
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- updated operator to v0.47.1 release
+- Build `app.kubernetes.io/instance` label consistently. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1282)
+
+## 0.25.2
+
+**Release date:** 2024-08-21
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fixed vmalert ingress name. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1271)
+- fixed alertmanager ingress host template rendering. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1270)
+
+## 0.25.1
+
+**Release date:** 2024-08-21
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Added `.Values.global.license` configuration
+- Fixed extraLabels rendering. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1248)
+- Fixed vmalert url to alertmanager by including its path prefix
+- Removed `networking.k8s.io/v1beta1/Ingress` and `extensions/v1beta1/Ingress` support
+- Fixed kubedns servicemonitor template. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1255)
+
 ## 0.25.0
 
 **Release date:** 2024-08-16
@@ -11,7 +44,10 @@
 ![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
-- * Update Notes: it requires to update CRD dependency manually before upgrade
+**Update note**: it requires to update CRD dependency manually before upgrade
+
+**Update note**: requires Helm 3.14+
+
 - Moved dashboards templating logic out of sync script to Helm template
 - Allow to disable default grafana datasource
 - Synchronize Etcd dashboards and rules with mixin provided by Etcd

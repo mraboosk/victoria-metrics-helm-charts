@@ -37,15 +37,15 @@ spec:
       initContainers: {{ include "victoria-metrics.initContiners" . | nindent 8 }}
       {{- end }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
-      imagePullSecrets: {{ . }}
+      imagePullSecrets: {{ toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "victoria-metrics.name" . }}-{{ $app.name }}
+        - name: vmsingle
           {{- if $app.securityContext.enabled }}
           securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
-          imagePullPolicy: "{{ $app.image.pullPolicy }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
           {{- if $app.containerWorkingDir }}
           workingDir: {{ $app.containerWorkingDir }}
           {{- end }}
@@ -54,6 +54,9 @@ spec:
             - --storageDataPath={{ $app.persistentVolume.mountPath }}
             {{- if $app.scrape.enabled }}
             - --promscrape.config=/scrapeconfig/scrape.yml
+            {{- end }}
+            {{- if $app.relabel.enabled }}
+            - --relabelConfig=/relabelconfig/relabel.yml
             {{- end }}
             {{- range $key, $value := $app.extraArgs }}
             {{- if kindIs "slice" $value }}
@@ -75,7 +78,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: 8428
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" $app.extraArgs.httpListenAddr "default" "8428") }}
             {{- with $app.extraArgs.graphiteListenAddr }}
             - name: graphite-tcp
               protocol: TCP
@@ -118,40 +121,60 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- with $app.persistentVolume }}
             - name: server-volume
               mountPath: {{ $app.persistentVolume.mountPath }}
-              subPath: {{ $app.persistentVolume.subPath }}
-          {{- if $app.scrape.enabled }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- if $app.scrape.enabled }}
             - name: scrapeconfig
               mountPath: /scrapeconfig
-          {{- end }}
-          {{- range $app.extraHostPathMounts }}
+            {{- end }}
+            {{- if $app.relabel.enabled }}
+            - name: relabelconfig
+              mountPath: /relabelconfig
+            {{- end }}
+            {{- range $app.extraHostPathMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- range $app.extraConfigmapMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraConfigmapMounts }}
             - name: {{ $app.name }}-{{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- range $app.extraSecretMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- range $app.extraSecretMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
-              subPath: {{ .subPath }}
-              readOnly: {{ .readOnly }}
-          {{- end }}
-          {{- include "victoria-metrics.license.mount" . | nindent 12 }}
-          {{- with $app.extraVolumeMounts }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+              {{- with .readOnly }}
+              readOnly: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- include "victoria-metrics.license.mount" . | nindent 12 }}
+            {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- end }}
         {{- $manager := $app.vmbackupmanager }}
         {{- if $manager.enable }}
-        - name: {{ template "victoria-metrics.name" . }}-vmbackupmanager
+        - name: vmbackupmanager
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $manager)) }}
-          imagePullPolicy: "{{ $app.image.pullPolicy }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
           args:
             - --eula={{ $manager.eula }}
             - --disableHourly={{ $manager.disableHourly }}
@@ -194,13 +217,17 @@ spec:
             - name: manager-http
               containerPort: 8300
           volumeMounts:
+            {{- with $app.persistentVolume }}
             - name: server-volume
-              mountPath: {{ $app.persistentVolume.mountPath }}
-              subPath: {{ $app.persistentVolume.subPath }}
-          {{- with $manager.extraVolumeMounts }}
+              mountPath: {{ .mountPath }}
+              {{- with .subPath }}
+              subPath: {{ . }}
+              {{- end }}
+            {{- end }}
+            {{- with $manager.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- include "victoria-metrics.license.mount" . | nindent 12 }}
+            {{- end }}
+            {{- include "victoria-metrics.license.mount" . | nindent 12 }}
         {{- end }}
       {{- with $app.extraContainers }}
       {{- toYaml . | nindent 8 }}
@@ -225,16 +252,18 @@ spec:
           configMap:
             name: {{ include "victoria-metrics.server.scrape.configname" . }}
         {{- end }}
-        {{- if not $app.persistentVolume.enabled }}
+        {{- if $app.relabel.enabled }}
+        - name: relabelconfig
+          configMap:
+            name: {{ include "victoria-metrics.server.relabel.configname" . }}
+        {{- end }}
         - name: server-volume
-          emptyDir: {}
-        {{- else }}
-        {{- if $app.persistentVolume.existingClaim }}
-        - name: server-volume
+          {{- if $app.persistentVolume.enabled }}
           persistentVolumeClaim:
-            claimName: {{ $app.persistentVolume.existingClaim }}
-        {{- end }}
-        {{- end }}
+            claimName: {{ $app.persistentVolume.existingClaim | default "server-volume" }}
+          {{- else }}
+          emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
+          {{- end }}
         {{- with $app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -254,9 +283,9 @@ spec:
         {{- end }}
         resources:
           requests:
-            storage: "{{ $app.persistentVolume.size }}"
-        {{- with $app.persistentVolume.storageClass }}
-        storageClassName: {{ "" . (eq "-" .) }}
+            storage: {{ $app.persistentVolume.size }}
+        {{- with $app.persistentVolume.storageClassName }}
+        storageClassName: {{ ternary "" . (eq "-" .) }}
         {{- end }}
         {{- with $app.persistentVolume.matchLabels }}
         selector:

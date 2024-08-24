@@ -2,7 +2,7 @@ apiVersion: v2
 type: application
 name: victoria-metrics-agent
 description: Victoria Metrics Agent - collects metrics from various sources and stores them to VictoriaMetrics
-version: 0.10.14
+version: 0.11.0
 appVersion: v1.102.1
 sources:
   - https://github.com/VictoriaMetrics/helm-charts
@@ -33,4 +33,4 @@ annotations:
 dependencies:
   - name: victoria-metrics-common
     version: "0.0.*"
-    repository: file://../victoria-metrics-common
+    repository: https://victoriametrics.github.io/helm-charts

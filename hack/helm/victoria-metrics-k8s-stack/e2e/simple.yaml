@@ -1,7 +1,21 @@
 ## override to prevent objects name collision
+global:
+  license:
+    keyRef:
+      name: keyName
+      key: key
 fullnameOverride: "vm-stack"
 victoria-metrics-operator:
   fullnameOverride: "vm-operator"
 vmsingle:
   ingress:
     enabled: true
+vmcluster:
+  enabled: true
+  ingress:
+    insert:
+      enabled: true
+    select:
+      enabled: true
+    storage:
+      enabled: true

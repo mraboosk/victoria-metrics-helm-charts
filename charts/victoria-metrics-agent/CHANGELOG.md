@@ -2,12 +2,30 @@
 
 ## Next release
 
-- Removed PodSecurityPolicy
-- Set minimal kubernetes version to 1.25
-- Removed support for policy/v1beta1/PodDisruptionBudget
+- Added ability to configure container port
+- Fixed image pull secrets. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1285)
+- Removed necessity to set `.Values.persistentVolume.existingClaim` when volume is expected to be created by chart. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/189)
+
+## 0.11.0
+
+**Release date:** 2024-08-21
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+**Update note**: main container name was changed to `vmagent`, which will recreate a pod.
+
+**Update note**: requires Helm 3.14+
+
+- Removed `PodSecurityPolicy`
+- Set minimal kubernetes version to `1.25`
+- Removed support for `policy/v1beta1/PodDisruptionBudget`
 - Added params to configure probes `.Values.probe.readiness`, `.Values.probe.liveness` and `.Values.probe.startup`
-- Added global imagePullSecrets and image.registry
+- Added `.Values.global.imagePullSecrets` and `.Values.global.image.registry`
 - Added `.Values.emptyDir` to customize default cache directory
+- Use static container names in a pod
+- Removed `networking.k8s.io/v1beta1/Ingress` and `extensions/v1beta1/Ingress` support
+- Added `.Values.service.ipFamilies` and `.Values.service.ipFamilyPolicy` for service IP family management
 
 ## 0.10.14
 
