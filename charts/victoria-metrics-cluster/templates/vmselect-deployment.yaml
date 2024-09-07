@@ -11,7 +11,7 @@ metadata:
   {{- $ctx := mergeOverwrite (deepCopy $global) (dict "extraLabels" $app.extraLabels) }}
   labels: {{ include "victoria-metrics.vmselect.labels" $ctx | nindent 4 }}
   name: {{ $fullname }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "vm.namespace" . }}
 spec:
   selector:
     matchLabels: {{ include "victoria-metrics.vmselect.matchLabels" . | nindent 6 }}
@@ -26,9 +26,10 @@ spec:
       {{- with $app.podAnnotations }}
       annotations: {{ toYaml . | nindent 8 }}
       {{- end }}
+      {{- $_ := set $ctx "extraLabels" $app.podLabels }}
       labels: {{ include "victoria-metrics.vmselect.podLabels" $ctx | nindent 8 }}
     spec:
-      {{- with $ctx.priorityClassName }}
+      {{- with $app.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
@@ -46,25 +47,9 @@ spec:
           workingDir: {{ . }}
           {{- end }}
           {{- if $app.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
-          args:
-            - --cacheDataPath={{ $app.cacheMountPath }}
-            {{- if not (or $app.suppressStorageFQDNsRender $app.suppresStorageFQDNsRender) }}
-            {{- include "victoria-metrics.vmselect.vmstorage-pod-fqdn" . | nindent 12 }}
-            {{- end }}
-            {{- range $key, $value := $app.extraArgs }}
-            {{- if kindIs "slice" $value }}
-            {{- range $v := $value }}
-            - --{{ $key }}={{ $v }}
-            {{- end }}
-            {{- else }}
-            - --{{ $key }}={{ $value }}
-            {{- end }}
-            {{- end }}
-            {{- with (include "chart.license.flag" .) }}
-            - {{ . }}
-            {{- end }}
+          args: {{ include "vmselect.args" . | nindent 12 }}
           {{- with $app.envFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -77,7 +62,7 @@ spec:
             {{- with $app.extraArgs.clusternativeListenAddr }}
             - name: cluster-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
           {{- with (fromYaml (include "vm.probe" (dict "app" $app "type" "readiness"))) }}
           readinessProbe: {{ toYaml . | nindent 12 }}
@@ -104,7 +89,7 @@ spec:
             {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- include "chart.license.mount" . | nindent 12 }}
+            {{- include "vm.license.mount" . | nindent 12 }}
           {{- with $app.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -115,9 +100,9 @@ spec:
       nodeSelector: {{ toYaml . | nindent 8 }}
       {{- end }}
       {{- if $app.podSecurityContext.enabled }}
-      securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.podSecurityContext "context" .) | nindent 8 }}
+      securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ template "victoria-metrics.serviceAccountName" . }}
+      serviceAccountName: {{ include "victoria-metrics.serviceAccountName" . }}
       {{- with $app.tolerations }}
       tolerations: {{ toYaml . | nindent 8 }}
       {{- end }}
@@ -138,5 +123,5 @@ spec:
           {{- else }}
           emptyDir: {{ toYaml $app.emptyDir | nindent 12 }}
           {{- end }}
-        {{- include "chart.license.volume" . | nindent 8 }}
+        {{- include "vm.license.volume" . | nindent 8 }}
 {{- end }}

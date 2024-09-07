@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Fetch dashboards from provided urls into this chart."""
 import json
+import base64
 import pathlib
+import re
 from urllib.parse import urlparse
 from os import makedirs
 from os.path import dirname, join, realpath
@@ -21,8 +23,13 @@ class literal(str):
     pass
 
 
-class quoted(str):
-    pass
+class CustomDumper(yaml.Dumper):
+    def represent_data(self, data):
+        # workaround for strings values, that are automatically transformed to "true" in fromYaml helm template function
+        if isinstance(data, str) and data in ["y", "n", "yes", "no", "on", "off"]:
+            return self.represent_scalar("tag:yaml.org,2002:str", data, style="'")
+
+        return super(CustomDumper, self).represent_data(data)
 
 
 def change_style(style, representer):
@@ -47,6 +54,7 @@ sources = [
     "https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/master/dashboards/backupmanager.json",
     "https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/manifests/grafana-dashboardDefinitions.yaml",
     "https://raw.githubusercontent.com/etcd-io/etcd/main/contrib/mixin/mixin.libsonnet",
+    "https://grafana.com/api/dashboards/1860/revisions/37/download",
 ]
 
 allowed_dashboards = [
@@ -66,16 +74,17 @@ condition_map = {
     "scheduler": ".Values.kubeScheduler.enabled",
     "node-rsrc-use": '(index .Values "prometheus-node-exporter" "enabled")',
     "node-cluster-rsrc-use": '(index .Values "prometheus-node-exporter" "enabled")',
+    "node-exporter-full": "false",
     "victoriametrics-cluster": ".Values.vmcluster.enabled",
-    "victoriametrics": ".Values.vmsingle.enabled",
-    "vmalert": ".Values.vmalert.enabled",
-    "operator": '(index .Values "victoria-metrics-operator" "enabled")',
-    "k8s-system-coredns": "and .Values.experimentalDashboardsEnabled .Values.coreDns.enabled",
+    "victoriametrics-single-node": ".Values.vmsingle.enabled",
+    "victoriametrics-vmalert": ".Values.vmalert.enabled",
+    "victoriametrics-operator": '(index .Values "victoria-metrics-operator" "enabled")',
+    "kubernetes-system-coredns": "and .Values.experimentalDashboardsEnabled .Values.coreDns.enabled",
     "k8s-system-api-server": "and .Values.experimentalDashboardsEnabled .Values.kubeApiServer.enabled",
-    "k8s-views-pods": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
+    "kubernetes-views-pods": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
     "k8s-views-nodes": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
-    "k8s-views-namespace": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
-    "k8s-views-global": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
+    "kubernetes-views-namespaces": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
+    "kubernetes-views-global": "and .Values.experimentalDashboardsEnabled .Values.kubelet.enabled",
 }
 
 
@@ -85,19 +94,27 @@ def escape(s):
         .replace("}}", "}}`}}")
         .replace("{{`{{", "{{`{{`}}")
         .replace("}}`}}", "{{`}}`}}")
+        .replace("'[[", "{{")
         .replace("[[", "{{")
+        .replace("]]'", "}}")
         .replace("]]", "}}")
     )
-
-
-def quoted_presenter(dumper, data):
-    return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="'")
 
 
 def init_yaml_styles():
     represent_literal_str = change_style("|", SafeRepresenter.represent_str)
     yaml.add_representer(literal, represent_literal_str)
-    yaml.add_representer(quoted, quoted_presenter)
+
+
+def fix_query(query):
+    query = re.sub(
+        '[\\s]*cluster[\\s]*=[~]*[\\s]*\\"',
+        ' [[ $.Values.global.clusterLabel ]]=~"',
+        query.rstrip(),
+    )
+    if "\n" in query:
+        query = literal(query)
+    return query
 
 
 def fix_expr(target):
@@ -105,19 +122,10 @@ def fix_expr(target):
     due to yaml import specifics;
     convert multiline expressions to literal style, |-"""
     if "expr" in target:
-        target["expr"] = target["expr"].rstrip()
-        if "\n" in target["expr"]:
-            target["expr"] = literal(target["expr"])
+        target["expr"] = fix_query(target["expr"])
 
 
 def replace_ds_type_in_panel(panel):
-    if "gridPos" in panel:
-
-        # workaround for 'y' key, as it's automatically transformed to "true" in fromYaml helm template function
-        if "y" in panel["gridPos"]:
-            y = panel["gridPos"]["y"]
-            del panel["gridPos"]["y"]
-            panel["gridPos"]["[[ .yaxis ]]"] = y
     if "datasource" in panel:
         if "type" in panel["datasource"]:
             panel["datasource"][
@@ -137,20 +145,43 @@ def replace_ds_type_in_panel(panel):
 
 
 def patch_dashboard(dashboard, name):
+    for panel in dashboard.get("panels", []):
+        replace_ds_type_in_panel(panel)
+
     ## multicluster
     if "templating" in dashboard:
         for variable in dashboard["templating"].get("list", []):
             if variable.get("name", "") == "cluster":
+                if "definition" in variable and "cluster" in variable["definition"]:
+                    variable["definition"] = variable["definition"].replace(
+                        "cluster", "[[ $.Values.global.clusterLabel ]]"
+                    )
+                variable["type"] = (
+                    '[[ ternary "query" "constant" $.Values.grafana.sidecar.dashboards.multicluster ]]'
+                )
                 variable["hide"] = (
                     "[[ ternary 0 2 $.Values.grafana.sidecar.dashboards.multicluster ]]"
                 )
-            if (
-                variable.get("type", "") == "datasource"
-                and variable.get("query", "") == "prometheus"
-            ):
                 variable["query"] = (
-                    '[[ default "prometheus" .Values.grafana.defaultDatasourceType ]]'
+                    f'[[ ternary (b64dec "%(query)s" | replace "cluster" $.Values.global.clusterLabel) ".*" $.Values.grafana.sidecar.dashboards.multicluster ]]'
+                    % {
+                        "query": base64.b64encode(
+                            json.dumps(variable["query"]).encode("ascii")
+                        ).decode("utf-8")
+                    }
                 )
+            else:
+                if "definition" in variable:
+                    variable["definition"] = fix_query(variable["definition"])
+                if "query" in variable:
+                    if "query" in variable["query"]:
+                        variable["query"]["query"] = fix_query(
+                            variable["query"]["query"]
+                        )
+                if variable.get("type", "") == "datasource":
+                    variable["query"] = (
+                        '[[ default "prometheus" .Values.grafana.defaultDatasourceType ]]'
+                    )
 
     ## fix drilldown links. see https://github.com/kubernetes-monitoring/kubernetes-mixin/issues/659
     for row in dashboard.get("rows", []):
@@ -159,9 +190,6 @@ def patch_dashboard(dashboard, name):
             for style in panel.get("styles", []):
                 if "linkUrl" in style and style["linkUrl"].startswith("./d"):
                     style["linkUrl"] = style["linkUrl"].replace("./d", "/d")
-
-    for panel in dashboard.get("panels", []):
-        replace_ds_type_in_panel(panel)
 
     if "tags" in dashboard:
         dashboard["tags"].append("vm-k8s-stack")
@@ -180,6 +208,7 @@ def yaml_dump(struct):
         struct,
         width=1000,  # to disable line wrapping
         default_flow_style=False,  # to disable multiple items on single line
+        Dumper=CustomDumper,
     )
 
 
@@ -235,8 +264,11 @@ def main():
         raw_text = response.text
         dashboards = {}
         path = pathlib.Path(src)
-        if path.suffix in [".json", ".libsonnet"]:
-            if path.suffix == ".libsonnet":
+        suffix = path.suffix
+        if not suffix:
+            suffix = ".json"
+        if suffix in [".json", ".libsonnet"]:
+            if suffix == ".libsonnet":
                 raw_text = _jsonnet.evaluate_snippet(
                     src,
                     "(" + raw_text + ").grafanaDashboards",
@@ -247,14 +279,15 @@ def main():
             # is it already a dashboard structure or is it nested (etcd case)?
             flat_structure = bool(data.get("annotations"))
             if flat_structure:
-                dashboards[path.name.replace(path.suffix, "")] = data
+                name = re.sub("[ /-]+", "-", data["title"].lower())
+                dashboards[name] = data
             else:
                 for r in data:
                     name = r.replace(".json", "")
                     if name not in allowed_dashboards:
                         continue
                     dashboards[name] = data[r]
-        elif path.suffix == ".yaml":
+        elif suffix == ".yaml":
             data = yaml.full_load(raw_text)
             for group in data["items"]:
                 for r in group["data"]:
@@ -263,7 +296,7 @@ def main():
                         continue
                     dashboards[name] = json.loads(group["data"][r])
         else:
-            print(f"Format {path.suffix} is not supported")
+            print(f"Format {suffix} is not supported")
             continue
         for d in dashboards:
             dashboard = dashboards[d]

@@ -1,10 +1,16 @@
 {{- $global := (dict "Values" (deepCopy .Values) "Release" (deepCopy .Release) "Chart" (deepCopy .Chart) "Template" (deepCopy .Template)) -}}
 {{- include "vm.enterprise.only" . -}}
-{{- if not (or .Values.auth.enable .Values.rateLimiter.enable) -}}
-  {{- fail "at least one item in `.auth.enable` or `.rateLimiter.enable` must be enable " -}}
+{{- if hasKey .Values.rateLimiter "enable" }}
+  {{- fail "`rateLimiter.enable` is deprecated. Use `rateLimiter.enabled` instead" }}
+{{- end }}
+{{- if hasKey .Values.auth "enable" }}
+  {{- fail "`auth.enable` is deprecated. Use `auth.enabled` instead" }}
+{{- end }}
+{{- if not (or .Values.auth.enabled .Values.rateLimiter.enabled) -}}
+  {{- fail "at least one item in `.auth.enabled` or `.rateLimiter.enabled` must be set to `true`" -}}
 {{- end -}}
 
-{{- if .Values.rateLimiter.enable -}}
+{{- if .Values.rateLimiter.enabled -}}
   {{- if not .Values.rateLimiter.datasource.url -}}
   {{- fail "please specify datasource url (`.rateLimiter.datasource.url`) for Rate Limiting" -}}
   {{- end -}}
@@ -22,13 +28,13 @@
 {{- end -}}
 {{- $isHost := gt (len .Values.extraHostPathMounts) 0 -}}
 {{- $isExtraVolumes := or $isHost (gt (len .Values.extraVolumes) 0)  -}}
-{{- $isVolumes := or $isExtraVolumes .Values.rateLimiter.enable (and .Values.license.secret.name .Values.license.secret.key) -}}
+{{- $isVolumes := or $isExtraVolumes .Values.rateLimiter.enabled  (and .Values.license.secret.name .Values.license.secret.key) -}}
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "chart.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "vm.namespace" . }}
   labels: {{ include "chart.labels" . | nindent 4 }}
   {{- with .Values.annotations }}
   annotations: {{ toYaml . | nindent 4 }}
@@ -45,7 +51,7 @@ spec:
     spec:
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
       {{- if .Values.podSecurityContext.enabled }}
-      securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
+      securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       {{- with (.Values.imagePullSecrets | default .Values.global.imagePullSecrets) }}
       imagePullSecrets: {{ toYaml . | nindent 8 }}
@@ -53,33 +59,11 @@ spec:
       containers:
         - name: vmgateway
           {{- if .Values.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" .Values)) }}
           workingDir: {{ .Values.containerWorkingDir }}
-          args:
-            - -clusterMode={{ .Values.clusterMode }}
-            - -eula={{ .Values.eula }}
-            {{- if .Values.rateLimiter.enable }}
-            - -ratelimit.config=/config/rate-limiter.yml
-            - -datasource.url={{ .Values.rateLimiter.datasource.url }}
-            {{- end }}
-            - -enable.rateLimit={{ .Values.rateLimiter.enable }}
-            - -enable.auth={{ .Values.auth.enable }}
-            - -read.url={{ .Values.read.url }}
-            - -write.url={{ .Values.write.url }}
-            {{- range $key, $value := .Values.extraArgs }}
-            {{- if kindIs "slice" $value }}
-            {{- range $v := $value }}
-            - -{{ $key }}={{ $v }}
-            {{- end }}
-            {{- else }}
-            - -{{ $key }}={{ $value }}
-            {{- end }}
-            {{- end }}
-            {{- with (include "chart.license.flag" .) }}
-            - {{ . }}
-            {{- end }}
+          args: {{ include "vmgateway.args" . | nindent 12 }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
@@ -101,7 +85,7 @@ spec:
           {{- end }}
           {{- if $isVolumes }}
           volumeMounts:
-            {{- if .Values.rateLimiter.enable }}
+            {{- if .Values.rateLimiter.enabled }}
             - name: config
               mountPath: /config
             {{- end }}
@@ -115,7 +99,7 @@ spec:
               readOnly: {{ . }}
               {{- end }}
             {{- end }}
-            {{- include "chart.license.mount" . | nindent 12 }}
+            {{- include "vm.license.mount" . | nindent 12 }}
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -137,7 +121,7 @@ spec:
       {{- end }}
       {{- if $isVolumes }}
       volumes:
-        {{- if .Values.rateLimiter.enable }}
+        {{- if .Values.rateLimiter.enabled }}
         - name: config
           configMap:
             name: {{ include "chart.fullname" .}}
@@ -150,5 +134,5 @@ spec:
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- include "chart.license.volume" . | nindent 8 }}
+        {{- include "vm.license.volume" . | nindent 8 }}
       {{- end }}

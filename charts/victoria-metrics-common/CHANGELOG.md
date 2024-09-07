@@ -2,7 +2,52 @@
 
 ## Next release
 
-- TODO
+- Fixed protocol extraction with TLS enabled
+
+## 0.0.9
+
+**Release date:** 2024-09-02
+
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Allow `appKey` argument to be a list to support deeply nested objects
+- Added `vm.namespace`, which returns `namespaceOverride` or `global.namespaceOverride` or `Release.Namespace` as a default
+- Added `vm.managed.fullname`, which returns default fullname prefixed by `appKey`
+- Added `vm.plain.fullname`, which returns default fullname suffixed by `appKey`
+
+## 0.0.8
+
+**Release date:** 2024-08-29
+
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Added `vm.service` for unified service name generation
+- Added `vm.url` to construct service base url
+- Added `vm.name` for chart name
+- Added `vm.fullname` which is actively used in resource name construction
+- Added `vm.chart` to construct chart name label value
+- Added `vm.labels` for common labels
+- Added `vm.sa` for service account name
+- Added `vm.release` for release name
+- Added `vm.selectorLabels` for common selector labels
+
+## 0.0.7
+
+**Release date:** 2024-08-27
+
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Support short and long args flags in `vm.args`
+- Updated `vm.enterprise.only` error message
+
+## 0.0.6
+
+**Release date:** 2024-08-27
+
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Changed structure of `vm.args` template output
+- Removed `eula` support
 
 ## 0.0.5
 

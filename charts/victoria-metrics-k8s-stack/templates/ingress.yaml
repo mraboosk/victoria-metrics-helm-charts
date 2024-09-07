@@ -1,16 +1,20 @@
-{{- $global := (dict "Values" (deepCopy .Values) "Release" (deepCopy .Release) "Chart" (deepCopy .Chart) "Template" (deepCopy .Template)) -}}
-{{- $app := .Values.vmcluster }}
-{{- if and $app.enabled $app.ingress.insert.enabled }}
-{{- $ingress := $app.ingress.insert }}
-{{- $serviceName := (include "victoria-metrics-k8s-stack.vminsertName" .) }}
-{{- $servicePort := $app.spec.vminsert.port | default 8480 -}}
+{{- $ns := include "vm.namespace" . }}
+{{- range $name, $config := .Values }}
+  {{- if and (kindIs "map" $config) (hasKey $config "ingress") ($config.enabled) (empty (index $.Subcharts $name)) }}
+    {{- $ingresses := ternary (dict $name $config.ingress) $config.ingress (hasKey $config.ingress "enabled") }}
+    {{- range $ingName, $ingress := $ingresses }}
+      {{- if $ingress.enabled }}
+        {{- $appKey := ternary $name (list $name $ingName) (eq $name $ingName) -}}
+        {{- $ctx := dict "helm" $ "appKey" $appKey -}}
+        {{- $serviceName := include "vm.service" $ctx }}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $serviceName }}
-  namespace: {{ .Release.Namespace }}
-  {{- $extraLabels := dict "app.kubernetes.io/component" (printf "%s-vmcluster" (include "victoria-metrics-k8s-stack.name" .)) }}
-  {{- $ctx := merge (deepCopy $global) (dict "extraLabels" (merge $extraLabels $ingress.labels)) }}
+  namespace: {{ $ns }}
+  {{- $extraLabels := dict "app.kubernetes.io/component" (printf "%s-%s" (include "victoria-metrics-k8s-stack.name" $) $name) }}
+  {{- $_ := set $ctx "extraLabels" (merge $extraLabels $ingress.labels) }}
   labels: {{ include "victoria-metrics-k8s-stack.labels" $ctx | nindent 4 }}
   {{- with $ingress.annotations }}
   annotations: {{ toYaml . | nindent 4 }}
@@ -34,7 +38,7 @@ spec:
               service:
                 name: {{ $serviceName }}
                 port:
-                  number: {{ $servicePort }}
+                  name: {{ $ingress.serviceName | default "http" }}
             {{- with $ingress.path }}
             path: {{ . }}
             {{- end }}
@@ -45,4 +49,8 @@ spec:
       host: {{ tpl . $ }}
       {{- end }}
     {{- end }}
+
+      {{- end }}
+    {{- end }}
+  {{- end }}
 {{- end }}

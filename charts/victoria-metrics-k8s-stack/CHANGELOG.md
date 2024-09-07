@@ -2,6 +2,154 @@
 
 ## Next release
 
+- TODO
+
+## 0.25.15
+
+**Release date:** 2024-09-05
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Drop empty endpoints param from scrape configuration
+- Fixed proto when TLS is enabled. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1449)
+
+## 0.25.14
+
+**Release date:** 2024-09-04
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fixed alertmanager templates
+
+## 0.25.13
+
+**Release date:** 2024-09-04
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Use operator's own service monitor
+
+## 0.25.12
+
+**Release date:** 2024-09-03
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Fixed dashboards rendering. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1414)
+- Fixed service monitor label name.
+
+## 0.25.11
+
+**Release date:** 2024-09-03
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Merged ingress templates
+- Removed custom VMServiceScrape for operator
+- Added ability to override default Prometheus-compatible datatasources with all available parameters. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/860).
+- Do not use `grafana.dashboards` and `grafana.dashboardProviders`. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1312).
+- Migrated Node Exporter dashboard into chart
+- Deprecated `grafana.sidecar.jsonData`, `grafana.provisionDefaultDatasource` in a favour of `grafana.sidecar.datasources.default` slice of datasources.
+- Fail if no notifiers are set, do not set `notifiers` to null if empty
+
+## 0.25.10
+
+**Release date:** 2024-08-31
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fixed ingress extraPaths and externalVM urls rendering
+
+## 0.25.9
+
+**Release date:** 2024-08-31
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fixed vmalert ingress name typo
+- Added ability to override default Prometheus-compatible datatasources with all available parameters. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/860).
+- Do not use `grafana.dashboards` and `grafana.dashboardProviders`. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1312).
+
+## 0.25.8
+
+**Release date:** 2024-08-30
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fixed external notifiers rendering, when alertmanager is disabled. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1378)
+
+## 0.25.7
+
+**Release date:** 2024-08-30
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- fixed extra rules template context
+
+## 0.25.6
+
+**Release date:** 2024-08-29
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+**Update note**: Update `kubeProxy.spec` to `kubeProxy.vmScrape.spec`
+
+**Update note**: Update `kubeScheduler.spec` to `kubeScheduler.vmScrape.spec`
+
+**Update note**: Update `kubeEtcd.spec` to `kubeEtcd.vmScrape.spec`
+
+**Update note**: Update `coreDns.spec` to `coreDns.vmScrape.spec`
+
+**Update note**: Update `kubeDns.spec` to `kubeDns.vmScrape.spec`
+
+**Update note**: Update `kubeProxy.spec` to `kubeProxy.vmScrape.spec`
+
+**Update note**: Update `kubeControllerManager.spec` to `kubeControllerManager.vmScrape.spec`
+
+**Update note**: Update `kubeApiServer.spec` to `kubeApiServer.vmScrape.spec`
+
+**Update note**: Update `kubelet.spec` to `kubelet.vmScrape.spec`
+
+**Update note**: Update `kube-state-metrics.spec` to `kube-state-metrics.vmScrape.spec`
+
+**Update note**: Update `prometheus-node-exporter.spec` to `prometheus-node-exporter.vmScrape.spec`
+
+**Update note**: Update `grafana.spec` to `grafana.vmScrape.spec`
+
+- bump version of VM components to [v1.103.0](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.103.0)
+- Added `dashboards.<dashboardName>` bool flag to enable dashboard even if component it is for is not installed.
+- Allow extra `vmalert.notifiers` without dropping default notifier if `alertmanager.enabled: true`
+- Do not drop default notifier, when vmalert.additionalNotifierConfigs is set
+- Replaced static url proto with a template, which selects proto depending on a present tls configuration
+- Moved kubernetes components monitoring config from `spec` config to `vmScrape.spec`
+- Merged servicemonitor templates
+
+## 0.25.5
+
+**Release date:** 2024-08-26
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- TODO
+
+## 0.25.4
+
+**Release date:** 2024-08-26
+
+![AppVersion: v1.102.1](https://img.shields.io/static/v1?label=AppVersion&message=v1.102.1&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
 - updates operator to [v0.47.2](https://github.com/VictoriaMetrics/operator/releases/tag/v0.47.2)
 - kube-state-metrics - 5.16.4 -> 5.25.1
 - prometheus-node-exporter - 4.27.0 -> 4.29.0

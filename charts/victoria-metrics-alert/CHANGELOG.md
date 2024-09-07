@@ -2,6 +2,17 @@
 
 ## Next release
 
+- Added ability to override deployment namespace using `namespaceOverride` and `global.namespaceOverride` variables
+- updated alertmanager args for IPv6 compatibility. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/856)
+
+## 0.11.0
+
+**Release date:** 2024-08-29
+
+![AppVersion: v1.103.0](https://img.shields.io/static/v1?label=AppVersion&message=v1.103.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- bump version of VM components to [v1.103.0](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.103.0)
 - Added ability to configure container port
 - Fixed image pull secrets. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1285)
 - Renamed `.Values.alertmanager.persistentVolume.storageClass` to `.Values.alertmanager.persistentVolume.storageClassName`
@@ -213,7 +224,7 @@
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
 - bump version of VM components to [v1.94.0](https://github.com/VictoriaMetrics/VictoriaMetrics/releases/tag/v1.94.0)
-- Add support of providing enterprise license key for VictoriaMetrics enterprise. See [these docs](https://docs.victoriametrics.com/enterprise.html) for details.
+- Add support of providing enterprise license key for VictoriaMetrics enterprise. See [these docs](https://docs.victoriametrics.com/enterprise) for details.
 
 ## 0.8.0
 

@@ -2,7 +2,28 @@
 
 ## Next release
 
-- TODO
+- Added ability to override deployment namespace using `namespaceOverride` and `global.namespaceOverride` variables
+
+## 1.4.4
+
+**Release date:** 2024-09-03
+
+![AppVersion: v1.15.9](https://img.shields.io/static/v1?label=AppVersion&message=v1.15.9&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Fixed PVC in StatefulSet
+
+## 1.4.3
+
+**Release date:** 2024-08-27
+
+![AppVersion: v1.15.9](https://img.shields.io/static/v1?label=AppVersion&message=v1.15.9&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Removed `eula` support
+- Disable PodMonitor, when pull port is not defined
+- Upgraded application version to 1.15.9
+- Fixed default podDisruptionBudget configuration
 
 ## 1.4.2
 

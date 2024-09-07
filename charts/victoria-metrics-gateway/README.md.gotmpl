@@ -90,7 +90,7 @@ Remove application with command.
 helm uninstall vmgateway -n NAMESPACE
 ```
 
-# How to use [JWT signature verification](https://docs.victoriametrics.com/vmgateway.html#jwt-signature-verification)
+# How to use [JWT signature verification](https://docs.victoriametrics.com/vmgateway#jwt-signature-verification)
 
 Kubernetes best-practice is to store sensitive configuration parts in secrets. For example, 2 keys will be stored as:
 ```yaml
@@ -161,4 +161,4 @@ The following tables lists the configurable parameters of the chart and their de
 
 Change the values according to the need of the environment in ``victoria-metrics-gateway/values.yaml`` file.
 
-{{ template "chart.valuesTable" . }}
+{{ template "chart.valuesTableHtml" . }}

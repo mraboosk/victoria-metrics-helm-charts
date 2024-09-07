@@ -2,10 +2,20 @@
 
 ## Next release
 
+- Added ability to override deployment namespace using `namespaceOverride` and `global.namespaceOverride` variables
+
+## 0.6.1
+
+**Release date:** 2024-09-03
+
+![AppVersion: v0.28.0](https://img.shields.io/static/v1?label=AppVersion&message=v0.28.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
 - Added ability to configure container port
 - Fixed image pull secrets. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1285)
 - Renamed `.Values.server.persistentVolume.storageClass` to `.Values.server.persistentVolume.storageClassName`
 - Removed necessity to set `.Values.server.persistentVolume.existingClaim` when volume is expected to be created by chart. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/189)
+- Fixed PVC in StatefulSet
 
 ## 0.6.0
 
@@ -143,7 +153,7 @@
 ![AppVersion: v0.4.1-victorialogs](https://img.shields.io/static/v1?label=AppVersion&message=v0.4.1-victorialogs&color=success&logo=)
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
 
-- Add `kubernetes_container_name` into default [stream fields](https://docs.victoriametrics.com/VictoriaLogs/keyConcepts.html#stream-fields) configuration `fluent-bit`.
+- Add `kubernetes_container_name` into default [stream fields](https://docs.victoriametrics.com/victorialogs/keyconcepts#stream-fields) configuration `fluent-bit`.
 
 ## 0.3.2
 

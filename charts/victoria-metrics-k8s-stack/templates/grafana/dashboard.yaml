@@ -4,7 +4,6 @@
 Create custom template context
 */}}
 {{- $ctx := (dict "Values" (deepCopy .Values) "Release" (deepCopy .Release) "Chart" (deepCopy .Chart) "Template" (deepCopy .Template)) -}}
-{{- $ctx := mergeOverwrite $ctx (dict "yaxis" "y") -}}
 
 {{- /*
 Loop through all dashboard files, that were crafted with hack/sync_grafana_dashboards.py
@@ -25,7 +24,7 @@ Get dashboard data from file
 {{- /*
 Save condition for a dashboard from file
 */}}
-{{- $dashboardCondition := (eq $dashboardData.condition "true") -}}
+{{- $dashboardCondition := or $dashboardData.condition (dig $dashboardName false $.Values.dashboards) -}}
 
 {{- /*
 Delete condition from dashboard
@@ -44,7 +43,7 @@ Check if dashboard is enabled
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ include "vm.namespace" $ }}
   name: {{ printf "%s-%s" (include "victoria-metrics-k8s-stack.fullname" $) $dashboardName | replace "_" "" | trunc 63 | trimSuffix "-" | trimSuffix "." }}
   labels:
     app: {{ $app }}
@@ -62,7 +61,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ include "vm.namespace" $ }}
   name: {{ printf "%s-%s" (include "victoria-metrics-k8s-stack.fullname" $) $dashboardName | trunc 63 | trimSuffix "-" | trimSuffix "." }}
   labels:
     {{- if $.Values.grafana.sidecar.dashboards.label }}

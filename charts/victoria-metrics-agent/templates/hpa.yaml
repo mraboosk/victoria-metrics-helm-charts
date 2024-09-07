@@ -1,9 +1,5 @@
 {{- if .Values.horizontalPodAutoscaling.enabled }}
-{{- if .Capabilities.APIVersions.Has "autoscaling/v2" -}}
 apiVersion: autoscaling/v2
-{{- else}}
-apiVersion: autoscaling/v2beta2
-{{- end}}
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
@@ -12,7 +8,7 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
   name: {{ include "chart.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "vm.namespace" . }}
 spec:
   maxReplicas: {{ .Values.horizontalPodAutoscaling.maxReplicas }}
   minReplicas: {{ .Values.horizontalPodAutoscaling.minReplicas }}

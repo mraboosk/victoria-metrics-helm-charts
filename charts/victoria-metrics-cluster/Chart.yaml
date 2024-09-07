@@ -1,9 +1,9 @@
 apiVersion: v2
 type: application
-appVersion: v1.102.1
+appVersion: v1.103.0
 description: Victoria Metrics Cluster version - high-performance, cost-effective and scalable TSDB, long-term remote storage for Prometheus
 name: victoria-metrics-cluster
-version: 0.12.1
+version: 0.13.5
 sources:
   - https://github.com/VictoriaMetrics/helm-charts
 icon: https://avatars.githubusercontent.com/u/43720803?s=200&v=4
@@ -31,7 +31,7 @@ annotations:
     - name: Charts repo
       url: https://victoriametrics.github.io/helm-charts/
     - name: Docs
-      url: https://docs.victoriametrics.com/Cluster-VictoriaMetrics.html
+      url: https://docs.victoriametrics.com/cluster-victoriametrics
 dependencies:
   - name: victoria-metrics-common
     version: "0.0.*"

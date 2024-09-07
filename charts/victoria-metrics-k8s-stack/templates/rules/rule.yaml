@@ -102,13 +102,13 @@ Check if group is enabled
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMRule
 metadata:
-  namespace: {{ $.Release.Namespace }}
+  namespace: {{ include "vm.namespace" $ }}
   name: {{ include "victoria-metrics-k8s-stack.rulegroup.name" $ctx }}
   {{- with (include "victoria-metrics-k8s-stack.rulegroup.labels" $ctx) }}
   labels: {{ . | nindent 4 }}
   {{- end }}
-  {{- with (include "victoria-metrics-k8s-stack.rulegroup.annotations" $ctx) }}
-  annotations: {{ . | nindent 4 }}
+  {{- with $.Values.defaultRules.annotations }}
+  annotations: {{ toYaml . | nindent 4 }}
   {{- end }}
 spec:
   groups:
