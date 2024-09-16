@@ -16,7 +16,7 @@
   {{- include "vm.validate.args" . -}}
   {{- $Chart := (.helm).Chart | default .Chart -}}
   {{- $Values := (.helm).Values | default .Values -}}
-  {{- $Values.nameOverride | default $Values.global.nameOverride | default $Chart.Name | trunc 63 | trimSuffix "-" }}
+  {{- $Values.nameOverride | default ($Values.global).nameOverride | default $Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end -}}
 
 {{- /*
@@ -35,11 +35,15 @@ If release name contains chart name it will be used as a full name.
     {{- $values := $Values -}}
     {{- $global := (index $Values.global $Chart.Name) | default dict -}}
     {{- range $ak := $appKey }}
-      {{- $values = (index $values $ak) | default dict -}}
-      {{- $global = (index $global $ak) | default dict -}}
-      {{- if $values.name -}}
+      {{- if $values -}}
+        {{- $values = (index $values $ak) | default dict -}}
+      {{- end -}}
+      {{- if $global -}}
+        {{- $global = (index $global $ak) | default dict -}}
+      {{- end -}}
+      {{- if and (kindIs "map" $values) $values.name -}}
         {{- $fullname = $values.name -}}
-      {{- else if $global.name -}}
+      {{- else if and (kindIs "map" $global) $global.name -}}
         {{- $fullname = $global.name -}}
       {{- end -}}
     {{- end }}
@@ -49,6 +53,8 @@ If release name contains chart name it will be used as a full name.
       {{- $fullname = $Values.fullnameOverride -}}
     {{- else if (dig $Chart.Name "fullnameOverride" "" ($Values.global)) -}}
       {{- $fullname = (dig $Chart.Name "fullnameOverride" "" ($Values.global)) -}}
+    {{- else if ($Values.global).fullnameOverride -}}
+      {{- $fullname = $Values.global.fullnameOverride -}}
     {{- else -}}
       {{- $name := default $Chart.Name $Values.nameOverride -}}
       {{- if contains $name $Release.Name -}}
@@ -68,28 +74,35 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{- define "vm.managed.fullname" -}}
-  {{- with .appKey -}}
-    {{- $prefix := . -}}
-    {{- if kindIs "list" $prefix -}}
-      {{- $prefix = last $prefix -}}
-    {{- end -}}
+  {{- $prefix := .appKey -}}
+  {{- $oldPrefix := .prefix -}}
+  {{- if kindIs "slice" $prefix -}}
+    {{- $prefix = last $prefix -}}
+  {{- end -}}
+  {{- if $prefix -}}
+    {{- with $oldPrefix -}}
+      {{- $prefix = printf "%s-%s" $prefix . -}}
+    {{- end }}
     {{- $_ := set $ "prefix" $prefix -}}
   {{- end -}}
   {{- include "vm.fullname" . -}}
+  {{- $_ := set . "prefix" $oldPrefix -}}
 {{- end -}}
 
 {{- define "vm.plain.fullname" -}}
   {{- $suffix := .appKey -}}
-  {{- if kindIs "list" $suffix -}}
+  {{- $oldSuffix := .suffix -}}
+  {{- if kindIs "slice" $suffix -}}
     {{- $suffix = last $suffix }}
   {{- end -}}
   {{- if $suffix -}}
-    {{- with .suffix -}}
+    {{- with $oldSuffix -}}
       {{- $suffix = printf "%s-%s" $suffix . -}}
     {{- end -}}
     {{- $_ := set . "suffix" $suffix -}}
   {{- end -}}
   {{- include "vm.fullname" . -}}
+  {{- $_ := set . "suffix" $oldSuffix -}}
 {{- end -}}
 
 {{- /* Create chart name and version as used by the chart label. */ -}}
@@ -142,11 +155,20 @@ If release name contains chart name it will be used as a full name.
   {{- if .appKey -}}
     {{- $Values := (.helm).Values | default .Values -}}
     {{- $Chart := (.helm).Chart | default .Chart -}}
-    {{- if (index $Values .appKey).name -}}
-      {{- (index $Values .appKey).name -}}
-    {{- else if dig $Chart.Name .appKey "name" "" ($Values.global) -}}
-      {{- index $Values.global $Chart.Name .appKey "name" -}}
+    {{- $values := $Values -}}
+    {{- $global := (index $Values.global $Chart.Name) | default dict -}}
+    {{- $appKey := ternary (list .appKey) .appKey (kindIs "string" .appKey) -}}
+    {{- $name := last $appKey }}
+    {{- range $ak := $appKey }}
+      {{- $values = (index $values $ak) | default dict -}}
+      {{- $global = (index $global $ak) | default dict -}}
+      {{- if $values.name -}}
+        {{- $name = $values.name -}}
+      {{- else if $global.name -}}
+        {{- $name = $global.name -}}
+      {{- end -}}
     {{- end -}}
+    {{- $name -}}
   {{- end -}}
 {{- end -}}
 

@@ -1,7 +1,7 @@
 
 # Victoria Metrics Helm Chart for Cluster Version
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![Version: 0.13.5](https://img.shields.io/badge/Version-0.13.5-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![Version: 0.13.7](https://img.shields.io/badge/Version-0.13.7-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-cluster)
 [![Slack](https://img.shields.io/badge/join%20slack-%23victoriametrics-brightgreen.svg)](https://slack.victoriametrics.com/)
 
@@ -23,11 +23,20 @@ Access a Kubernetes cluster.
 
 Add a chart helm repository with follow commands:
 
-```console
-helm repo add vm https://victoriametrics.github.io/helm-charts/
+ - From HTTPS repository
 
-helm repo update
-```
+   ```console
+   helm repo add vm https://victoriametrics.github.io/helm-charts/
+
+   helm repo update
+   ```
+ - From OCI repository
+  
+   ```console
+   helm repo add vm oci://ghcr.io/victoriametrics/helm-charts/
+
+   helm repo update
+   ```
 
 List versions of ``vm/victoria-metrics-cluster`` chart available to installation:
 

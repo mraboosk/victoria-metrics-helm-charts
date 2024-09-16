@@ -1,7 +1,7 @@
 
 # Helm Chart For Victoria Metrics kubernetes monitoring stack.
 
-![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![Version: 0.25.15](https://img.shields.io/badge/Version-0.25.15-informational?style=flat-square)
+![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![Version: 0.25.16](https://img.shields.io/badge/Version-0.25.16-informational?style=flat-square)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/victoriametrics)](https://artifacthub.io/packages/helm/victoriametrics/victoria-metrics-k8s-stack)
 
 Kubernetes monitoring on VictoriaMetrics stack. Includes VictoriaMetrics Operator, Grafana dashboards, ServiceScrapes and VMRules
@@ -179,11 +179,20 @@ Access a Kubernetes cluster.
 
 Add a chart helm repository with follow commands:
 
-```console
-helm repo add vm https://victoriametrics.github.io/helm-charts/
+ - From HTTPS repository
 
-helm repo update
-```
+   ```console
+   helm repo add vm https://victoriametrics.github.io/helm-charts/
+
+   helm repo update
+   ```
+ - From OCI repository
+  
+   ```console
+   helm repo add vm oci://ghcr.io/victoriametrics/helm-charts/
+
+   helm repo update
+   ```
 
 List versions of ``vm/victoria-metrics-k8s-stack`` chart available to installation:
 
@@ -398,16 +407,6 @@ templates:
 </td>
     </tr>
     <tr>
-      <td>alertmanager.configSecret</td>
-      <td>string</td>
-      <td><pre lang="">
-""
-</pre>
-</td>
-      <td><p>if this one defined, it will be used for alertmanager configuration and config parameter will be ignored</p>
-</td>
-    </tr>
-    <tr>
       <td>alertmanager.enabled</td>
       <td>bool</td>
       <td><pre lang="">
@@ -447,6 +446,7 @@ true
       <td>alertmanager.spec</td>
       <td>object</td>
       <td><pre lang="plaintext">
+configSecret: ""
 externalURL: ""
 image:
     tag: v0.25.0
@@ -456,6 +456,16 @@ selectAllByDefault: true
 </pre>
 </td>
       <td><p>full spec for VMAlertmanager CRD. Allowed values described <a href="https://docs.victoriametrics.com/operator/api#vmalertmanagerspec" target="_blank">here</a></p>
+</td>
+    </tr>
+    <tr>
+      <td>alertmanager.spec.configSecret</td>
+      <td>string</td>
+      <td><pre lang="">
+""
+</pre>
+</td>
+      <td><p>if this one defined, it will be used for alertmanager configuration and config parameter will be ignored</p>
 </td>
     </tr>
     <tr>
@@ -1793,7 +1803,7 @@ true
       <td></td>
     </tr>
     <tr>
-      <td>prometheus-node-exporter.podLabels.jobLabel</td>
+      <td>prometheus-node-exporter.service.labels.jobLabel</td>
       <td>string</td>
       <td><pre lang="">
 node-exporter
